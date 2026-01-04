@@ -1,0 +1,62 @@
+{
+  "name": "CAT-Fast | Mental Math Trainer",
+  "short_name": "CAT-Fast",
+  "description": "Sharpen your mental math skills for CAT and beyond. Practice addition, subtraction, percentages, and ratio comparisons.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#121212",
+  "theme_color": "#4f46e5",
+  "categories": ["education", "productivity"],
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Start Math Practice",
+      "short_name": "Math",
+      "description": "Start addition and subtraction practice",
+      "url": "/?mode=math",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Percentage Practice",
+      "short_name": "Percent",
+      "description": "Practice percentage calculations",
+      "url": "/?mode=percentage",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Ratio Comparisons",
+      "short_name": "Ratios",
+      "description": "Practice ratio comparisons",
+      "url": "/?mode=ratio",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}
+

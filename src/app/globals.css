@@ -1,0 +1,242 @@
+@import "tailwindcss";
+
+:root {
+  /* After Hours Palette */
+  --deep-charcoal: #121212;
+  --charcoal-light: #1a1a1a;
+  --charcoal-medium: #242424;
+  --soft-slate: #3d3d4a;
+  --slate-muted: #5a5a6e;
+  --neon-indigo: #6366f1;
+  --neon-indigo-glow: #818cf8;
+  --neon-indigo-dim: #4f46e5;
+  --text-primary: #f5f5f7;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  --success-glow: #22c55e;
+  --error-flash: #ef4444;
+  
+  --background: var(--deep-charcoal);
+  --foreground: var(--text-primary);
+  
+  /* Safe area insets for iPhone notch/Dynamic Island */
+  --sat: env(safe-area-inset-top, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-charcoal: var(--deep-charcoal);
+  --color-charcoal-light: var(--charcoal-light);
+  --color-charcoal-medium: var(--charcoal-medium);
+  --color-soft-slate: var(--soft-slate);
+  --color-slate-muted: var(--slate-muted);
+  --color-neon-indigo: var(--neon-indigo);
+  --color-neon-indigo-glow: var(--neon-indigo-glow);
+  --color-neon-indigo-dim: var(--neon-indigo-dim);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-success: var(--success-glow);
+  --color-error: var(--error-flash);
+  --font-sans: var(--font-outfit);
+  --font-mono: var(--font-jetbrains);
+}
+
+/* Ensure html/body allow for safe area */
+html {
+  /* Enable safe area insets */
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  min-height: 100dvh;
+  /* Ensure content flows below notch/Dynamic Island */
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Safe area padding utility class for PWA standalone mode */
+.safe-area-padding {
+  /* Apply safe area padding for iPhone notch and home indicator */
+  padding-top: var(--sat);
+  padding-right: var(--sar);
+  padding-bottom: var(--sab);
+  padding-left: var(--sal);
+}
+
+/* Safe area padding utilities for individual components */
+.safe-top {
+  padding-top: max(1rem, var(--sat));
+}
+
+.safe-bottom {
+  padding-bottom: max(1rem, var(--sab));
+}
+
+.safe-left {
+  padding-left: max(1rem, var(--sal));
+}
+
+.safe-right {
+  padding-right: max(1rem, var(--sar));
+}
+
+/* Safe area margins (alternative to padding) */
+.safe-margin-top {
+  margin-top: var(--sat);
+}
+
+.safe-margin-bottom {
+  margin-bottom: var(--sab);
+}
+
+/* For fixed bottom navigation bars */
+.fixed-bottom-safe {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding-bottom: max(1rem, var(--sab));
+}
+
+/* For fixed top headers in standalone mode */
+.fixed-top-safe {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding-top: max(0.5rem, var(--sat));
+}
+
+/* Subtle animated gradient background */
+.after-hours-bg {
+  background: 
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.15), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(99, 102, 241, 0.08), transparent),
+    var(--deep-charcoal);
+  min-height: 100dvh;
+}
+
+/* Neon glow effect for accents */
+.neon-glow {
+  box-shadow: 
+    0 0 20px rgba(99, 102, 241, 0.3),
+    0 0 40px rgba(99, 102, 241, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Card glass effect */
+.glass-card {
+  background: linear-gradient(
+    135deg,
+    rgba(36, 36, 36, 0.9) 0%,
+    rgba(26, 26, 26, 0.95) 100%
+  );
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Success animation */
+@keyframes success-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+  50% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+}
+
+/* Error shake animation */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+.animate-success {
+  animation: success-pulse 0.5s ease-out;
+}
+
+/* Focus ring for inputs */
+.focus-neon:focus {
+  outline: none;
+  box-shadow: 
+    0 0 0 2px var(--neon-indigo),
+    0 0 20px rgba(99, 102, 241, 0.3);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--charcoal-light);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--soft-slate);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--neon-indigo);
+}
+
+/* PWA standalone mode specific styles */
+@media all and (display-mode: standalone) {
+  body {
+    /* Extra visual cue that we're in app mode */
+    overscroll-behavior-y: none;
+  }
+  
+  /* Prevent pull-to-refresh on iOS */
+  html {
+    overflow: hidden;
+  }
+  
+  body {
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Touch interaction optimizations for mobile */
+@media (hover: none) and (pointer: coarse) {
+  /* Larger touch targets on mobile */
+  button, 
+  [role="button"],
+  input[type="submit"],
+  input[type="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Disable hover effects that can cause sticky states on touch */
+  .touch-none-hover:hover {
+    background: inherit;
+  }
+}
+
+/* Prevent text selection on game elements for better touch experience */
+.no-select {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Tap highlight removal for cleaner touch interactions */
+.tap-highlight-none {
+  -webkit-tap-highlight-color: transparent;
+}
