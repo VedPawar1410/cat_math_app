@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, KeyboardEvent, ChangeEvent } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, RotateCcw, Flame, Percent, Clock, ChevronUp, ChevronDown } from "lucide-react";
 import { GameCard, GameCardHeader, GameCardContent, GameCardFooter } from "@/components/ui/GameCard";
 import { Button } from "@/components/ui/Button";
+import { NumPad } from "@/components/ui/NumPad";
 import {
   generatePercentageProblem,
   isPercentageCorrect,
@@ -20,13 +21,12 @@ export function PercentageGame() {
   const [difficulty, setDifficulty] = useState<PercentageDifficulty>(1);
   const [problem, setProblem] = useState<PercentageProblem | null>(null);
   const [feedbackState, setFeedbackState] = useState<FeedbackState>("neutral");
-  const [value, setValue] = useState("");
+  const [inputValue, setInputValue] = useState("");
   const [questionCount, setQuestionCount] = useState(0);
   const [sessionCorrect, setSessionCorrect] = useState(0);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   // Timer effect
   useEffect(() => {
@@ -39,18 +39,11 @@ export function PercentageGame() {
     return () => clearInterval(interval);
   }, [isPlaying, startTime]);
 
-  // Auto-focus input
-  useEffect(() => {
-    if (isPlaying && feedbackState === "neutral" && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [isPlaying, feedbackState, problem]);
-
   const generateNewProblem = useCallback(() => {
     const newProblem = generatePercentageProblem(difficulty);
     setProblem(newProblem);
     setFeedbackState("neutral");
-    setValue("");
+    setInputValue("");
   }, [difficulty]);
 
   const startGame = useCallback(() => {
@@ -67,7 +60,7 @@ export function PercentageGame() {
     setIsPlaying(false);
     setProblem(null);
     setFeedbackState("neutral");
-    setValue("");
+    setInputValue("");
     setQuestionCount(0);
     setSessionCorrect(0);
     setCurrentStreak(0);
@@ -75,10 +68,10 @@ export function PercentageGame() {
     setElapsedTime(0);
   }, []);
 
-  const handleAnswer = useCallback(() => {
-    if (!problem || !value.trim()) return;
+  const handleSubmitAnswer = useCallback(() => {
+    if (!problem || !inputValue.trim()) return;
 
-    const userAnswer = parseFloat(value);
+    const userAnswer = parseFloat(inputValue);
     if (isNaN(userAnswer)) return;
 
     const isCorrect = isPercentageCorrect(userAnswer, problem.answer, problem.decimalPlaces);
@@ -96,27 +89,25 @@ export function PercentageGame() {
     setTimeout(() => {
       generateNewProblem();
     }, isCorrect ? 1000 : 1500);
-  }, [problem, value, generateNewProblem]);
+  }, [problem, inputValue, generateNewProblem]);
 
-  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    // Allow numbers, decimal point, and negative sign
-    const newValue = e.target.value.replace(/[^0-9.-]/g, "");
+  const handleDigit = useCallback((digit: string) => {
+    if (feedbackState !== "neutral") return;
+    setInputValue((prev) => prev + digit);
+  }, [feedbackState]);
+
+  const handleDecimal = useCallback(() => {
+    if (feedbackState !== "neutral") return;
     // Only allow one decimal point
-    const parts = newValue.split(".");
-    if (parts.length > 2) return;
-    // Limit decimal places
-    if (parts[1] && parts[1].length > 2) return;
-    setValue(newValue);
-  };
+    if (inputValue.includes(".")) return;
+    // Don't allow more than 2 decimal places
+    setInputValue((prev) => (prev === "" ? "0." : prev + "."));
+  }, [feedbackState, inputValue]);
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && value.trim() && feedbackState === "neutral") {
-      handleAnswer();
-    }
-    if (e.key === "Escape") {
-      resetGame();
-    }
-  };
+  const handleDelete = useCallback(() => {
+    if (feedbackState !== "neutral") return;
+    setInputValue((prev) => prev.slice(0, -1));
+  }, [feedbackState]);
 
   const adjustDifficulty = (delta: number) => {
     const newDiff = Math.max(1, Math.min(5, difficulty + delta)) as PercentageDifficulty;
@@ -129,19 +120,35 @@ export function PercentageGame() {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // Keyboard shortcut to start game
+  // Keyboard support
   useEffect(() => {
-    const handleGlobalKeyDown = (e: globalThis.KeyboardEvent) => {
-      if (e.key === "Enter" && !isPlaying) {
-        startGame();
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isPlaying) {
+        if (e.key === "Enter") startGame();
+        return;
+      }
+      if (e.key === "Escape") {
+        resetGame();
+        return;
+      }
+      if (feedbackState !== "neutral") return;
+
+      if (e.key >= "0" && e.key <= "9") {
+        handleDigit(e.key);
+      } else if (e.key === ".") {
+        handleDecimal();
+      } else if (e.key === "Backspace") {
+        handleDelete();
+      } else if (e.key === "Enter" && inputValue.trim()) {
+        handleSubmitAnswer();
       }
     };
-    window.addEventListener("keydown", handleGlobalKeyDown);
-    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
-  }, [isPlaying, startGame]);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isPlaying, feedbackState, inputValue, startGame, resetGame, handleDigit, handleDecimal, handleDelete, handleSubmitAnswer]);
 
   const inputStyles = {
-    neutral: "border-soft-slate/30 focus:border-neon-indigo",
+    neutral: "border-soft-slate/30",
     correct: "border-success bg-success/10 text-success",
     incorrect: "border-error bg-error/10 text-error animate-shake",
   };
@@ -244,7 +251,7 @@ export function PercentageGame() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -20, scale: 0.95 }}
                 transition={{ duration: 0.3 }}
-                className="text-center py-6"
+                className="text-center py-4"
               >
                 {/* Fraction display */}
                 <div className="inline-flex flex-col items-center">
@@ -252,7 +259,7 @@ export function PercentageGame() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.1 }}
-                    className="text-4xl sm:text-5xl md:text-6xl font-bold text-text-primary font-mono"
+                    className="text-4xl sm:text-5xl font-bold text-text-primary font-mono"
                   >
                     {problem.numerator}
                   </motion.span>
@@ -266,7 +273,7 @@ export function PercentageGame() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.2 }}
-                    className="text-4xl sm:text-5xl md:text-6xl font-bold text-text-primary font-mono"
+                    className="text-4xl sm:text-5xl font-bold text-text-primary font-mono"
                   >
                     {problem.denominator}
                   </motion.span>
@@ -277,7 +284,7 @@ export function PercentageGame() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.25 }}
-                  className="flex items-center justify-center gap-2 mt-4 text-2xl text-text-muted"
+                  className="flex items-center justify-center gap-2 mt-3 text-xl text-text-muted"
                 >
                   <span>=</span>
                   <span className="text-neon-indigo">?</span>
@@ -289,7 +296,7 @@ export function PercentageGame() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="mt-3"
+                  className="mt-2"
                 >
                   <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-charcoal-medium text-text-muted border border-soft-slate/30">
                     Level {problem.difficulty} · {problem.decimalPlaces} decimal{problem.decimalPlaces > 1 ? "s" : ""}
@@ -299,63 +306,62 @@ export function PercentageGame() {
             )}
           </AnimatePresence>
 
-          {/* Answer input */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35 }}
-            className="w-full max-w-xs mx-auto mt-4"
-          >
-            <div className="relative">
-              <input
-                ref={inputRef}
-                type="text"
-                inputMode="decimal"
-                value={value}
-                onChange={handleInputChange}
-                onKeyDown={handleKeyDown}
-                disabled={feedbackState !== "neutral"}
-                placeholder="Enter percentage"
-                autoComplete="off"
-                className={`
-                  w-full px-4 py-4 pr-12
-                  text-2xl sm:text-3xl font-mono font-bold
-                  text-center
-                  bg-charcoal-light
-                  border-2 rounded-xl
-                  transition-all duration-200
-                  placeholder:text-text-muted/50 placeholder:text-lg
-                  disabled:opacity-50 disabled:cursor-not-allowed
-                  focus:outline-none focus:ring-2 focus:ring-neon-indigo/30
-                  ${inputStyles[feedbackState]}
-                `}
-              />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xl text-text-muted font-bold">
-                %
-              </span>
-            </div>
-
-            {/* Feedback message */}
-            <AnimatePresence>
-              {feedbackState !== "neutral" && problem && (
-                <motion.div
-                  initial={{ opacity: 0, y: -5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="text-center mt-3"
+          {/* Answer display */}
+          <div className="mt-2">
+            <div className="w-full max-w-xs mx-auto">
+              <div className="relative">
+                <div
+                  className={`
+                    w-full px-4 py-3 pr-10
+                    text-2xl sm:text-3xl font-mono font-bold
+                    text-center
+                    bg-charcoal-light
+                    border-2 rounded-xl
+                    min-h-[56px]
+                    flex items-center justify-center
+                    transition-all duration-200
+                    ${inputStyles[feedbackState]}
+                  `}
                 >
-                  <p className={`text-sm font-medium ${
-                    feedbackState === "correct" ? "text-success" : "text-error"
-                  }`}>
-                    {feedbackState === "correct" ? "Correct! 🎉" : `Answer: ${problem.answer}%`}
-                  </p>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
+                  {inputValue || <span className="text-text-muted/50">0.00</span>}
+                </div>
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xl text-text-muted font-bold">
+                  %
+                </span>
+              </div>
+
+              {/* Feedback message */}
+              <AnimatePresence>
+                {feedbackState !== "neutral" && problem && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="text-center mt-2"
+                  >
+                    <p className={`text-sm font-medium ${
+                      feedbackState === "correct" ? "text-success" : "text-error"
+                    }`}>
+                      {feedbackState === "correct" ? "Correct! 🎉" : `Answer: ${problem.answer}%`}
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+
+          {/* NumPad */}
+          <NumPad
+            onDigit={handleDigit}
+            onDecimal={handleDecimal}
+            onDelete={handleDelete}
+            onEnter={handleSubmitAnswer}
+            disabled={feedbackState !== "neutral"}
+            showDecimal={true}
+          />
 
           {/* Reset button */}
-          <GameCardFooter className="flex justify-center mt-4">
+          <GameCardFooter className="flex justify-center mt-2">
             <Button
               variant="ghost"
               size="sm"
@@ -370,4 +376,3 @@ export function PercentageGame() {
     </GameCard>
   );
 }
-

@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Play, RotateCcw, Flame, Target, Clock, ChevronUp, ChevronDown } from "lucide-react";
 import { GameCard, GameCardHeader, GameCardContent, GameCardFooter } from "@/components/ui/GameCard";
 import { Button } from "@/components/ui/Button";
+import { NumPad } from "@/components/ui/NumPad";
 import { MathQuestion } from "./MathQuestion";
-import { AnswerInput } from "./AnswerInput";
 import { generateProblem, MathProblem, Operation, Difficulty, getDifficultyDescription } from "@/lib/engines/mathEngine";
 import { useGameStore } from "@/lib/store";
 
@@ -22,6 +22,8 @@ export function MathGame() {
   const [sessionCorrect, setSessionCorrect] = useState(0);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
+  const [inputValue, setInputValue] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Timer effect
   useEffect(() => {
@@ -38,6 +40,7 @@ export function MathGame() {
     const newProblem = generateProblem(operation, difficulty);
     setProblem(newProblem);
     setFeedbackState("neutral");
+    setInputValue("");
   }, [operation, difficulty]);
 
   const startGame = useCallback(() => {
@@ -57,10 +60,14 @@ export function MathGame() {
     setSessionCorrect(0);
     setStartTime(null);
     setElapsedTime(0);
+    setInputValue("");
   }, []);
 
-  const handleAnswer = useCallback((answer: number) => {
-    if (!problem) return;
+  const handleSubmitAnswer = useCallback(() => {
+    if (!problem || !inputValue.trim()) return;
+
+    const answer = parseInt(inputValue, 10);
+    if (isNaN(answer)) return;
 
     const isCorrect = answer === problem.answer;
     setFeedbackState(isCorrect ? "correct" : "incorrect");
@@ -78,7 +85,26 @@ export function MathGame() {
     setTimeout(() => {
       generateNewProblem();
     }, isCorrect ? 800 : 1200);
-  }, [problem, generateNewProblem, submitAnswer]);
+  }, [problem, inputValue, generateNewProblem, submitAnswer]);
+
+  const handleDigit = useCallback((digit: string) => {
+    if (feedbackState !== "neutral") return;
+    // Handle negative sign
+    if (digit === "-") {
+      if (inputValue === "") {
+        setInputValue("-");
+      } else if (inputValue === "-") {
+        setInputValue("");
+      }
+      return;
+    }
+    setInputValue((prev) => prev + digit);
+  }, [feedbackState, inputValue]);
+
+  const handleDelete = useCallback(() => {
+    if (feedbackState !== "neutral") return;
+    setInputValue((prev) => prev.slice(0, -1));
+  }, [feedbackState]);
 
   const adjustDifficulty = (delta: number) => {
     const newDiff = Math.max(1, Math.min(5, difficulty + delta)) as Difficulty;
@@ -91,19 +117,38 @@ export function MathGame() {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // Keyboard shortcut to start game
+  // Keyboard support
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Enter" && !isPlaying) {
-        startGame();
+      if (!isPlaying) {
+        if (e.key === "Enter") startGame();
+        return;
       }
-      if (e.key === "Escape" && isPlaying) {
+      if (e.key === "Escape") {
         resetGame();
+        return;
+      }
+      if (feedbackState !== "neutral") return;
+
+      if (e.key >= "0" && e.key <= "9") {
+        handleDigit(e.key);
+      } else if (e.key === "-") {
+        handleDigit("-");
+      } else if (e.key === "Backspace") {
+        handleDelete();
+      } else if (e.key === "Enter" && inputValue.trim()) {
+        handleSubmitAnswer();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isPlaying, startGame, resetGame]);
+  }, [isPlaying, feedbackState, inputValue, startGame, resetGame, handleDigit, handleDelete, handleSubmitAnswer]);
+
+  const inputStyles = {
+    neutral: "border-soft-slate/30",
+    correct: "border-success bg-success/10 text-success",
+    incorrect: "border-error bg-error/10 text-error animate-shake",
+  };
 
   return (
     <GameCard>
@@ -235,17 +280,58 @@ export function MathGame() {
           {/* Question display */}
           {problem && <MathQuestion problem={problem} />}
 
-          {/* Answer input */}
-          <div className="mt-6">
-            <AnswerInput
-              onSubmit={handleAnswer}
-              feedbackState={feedbackState}
-              disabled={feedbackState !== "neutral"}
-            />
+          {/* Answer display */}
+          <div className="mt-4">
+            <div className="w-full max-w-xs mx-auto">
+              <div
+                className={`
+                  w-full px-4 py-3
+                  text-2xl sm:text-3xl font-mono font-bold
+                  text-center
+                  bg-charcoal-light
+                  border-2 rounded-xl
+                  min-h-[56px]
+                  flex items-center justify-center
+                  transition-all duration-200
+                  ${inputStyles[feedbackState]}
+                `}
+              >
+                {inputValue || <span className="text-text-muted/50">Your answer</span>}
+              </div>
+
+              {/* Feedback message */}
+              <AnimatePresence>
+                {feedbackState !== "neutral" && problem && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="text-center mt-2"
+                  >
+                    <p className={`text-sm font-medium ${
+                      feedbackState === "correct" ? "text-success" : "text-error"
+                    }`}>
+                      {feedbackState === "correct" ? "Correct! 🎉" : `Answer: ${problem.answer}`}
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
 
+          {/* NumPad */}
+          <NumPad
+            onDigit={handleDigit}
+            onDecimal={() => {}} // No decimal for integer math
+            onDelete={handleDelete}
+            onEnter={handleSubmitAnswer}
+            disabled={feedbackState !== "neutral"}
+            showDecimal={false}
+            showNegative={true}
+          />
+
           {/* Reset button */}
-          <GameCardFooter className="flex justify-center">
+          <GameCardFooter className="flex justify-center mt-2">
             <Button
               variant="ghost"
               size="sm"
@@ -260,4 +346,3 @@ export function MathGame() {
     </GameCard>
   );
 }
-
