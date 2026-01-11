@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Zap, Calculator, Percent, Scale } from "lucide-react";
+import { Zap, Calculator, Percent, Scale, Link2 } from "lucide-react";
 import { MathGame } from "@/components/game/MathGame";
 import { PercentageGame } from "@/components/game/PercentageGame";
 import { RatioGame } from "@/components/game/RatioGame";
+import { ChainGame } from "@/components/game/ChainGame";
 
-type GameMode = "math" | "percentage" | "ratio";
+type GameMode = "math" | "percentage" | "ratio" | "chain";
 
 const gameModes: { id: GameMode; label: string; icon: React.ReactNode; description: string }[] = [
   {
@@ -27,6 +28,12 @@ const gameModes: { id: GameMode; label: string; icon: React.ReactNode; descripti
     label: "Ratio",
     icon: <Scale className="w-4 h-4" />,
     description: "Compare ratios",
+  },
+  {
+    id: "chain",
+    label: "Chain",
+    icon: <Link2 className="w-4 h-4" />,
+    description: "Addition chain",
   },
 ];
 
@@ -95,6 +102,7 @@ export default function Home() {
         {activeMode === "math" && <MathGame />}
         {activeMode === "percentage" && <PercentageGame />}
         {activeMode === "ratio" && <RatioGame />}
+        {activeMode === "chain" && <ChainGame />}
       </motion.div>
 
       {/* Footer hint */}
