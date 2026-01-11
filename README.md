@@ -14,6 +14,12 @@
 </p>
 
 <p align="center">
+  <a href="https://cat-math-app.vercel.app/">
+    <img src="https://img.shields.io/badge/▲_Live_Demo-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel Deployment">
+  </a>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js" alt="Next.js">
   <img src="https://img.shields.io/badge/TypeScript-5.0-blue?style=flat-square&logo=typescript" alt="TypeScript">
   <img src="https://img.shields.io/badge/Tailwind-4.0-38bdf8?style=flat-square&logo=tailwindcss" alt="Tailwind CSS">
