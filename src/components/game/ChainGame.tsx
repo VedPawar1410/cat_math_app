@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { motion } from "framer-motion";
 import {
   Play,
   RotateCcw,
@@ -23,7 +23,13 @@ import { NumPad } from "@/components/ui/NumPad";
 import { useChainStore } from "@/lib/chainStore";
 import { getChainDifficultyDescription, ChainDifficulty } from "@/lib/engines/chainEngine";
 
-type FeedbackState = "neutral" | "correct" | "incorrect";
+// The store moves to the next step as soon as an answer is submitted, so
+// feedback keeps its own copy of the step it describes.
+interface StepFeedback {
+  stepNumber: number;
+  isCorrect: boolean;
+  workedAnswer: string; // e.g. "142 + 24 = 166"
+}
 
 export function ChainGame() {
   const {
@@ -47,9 +53,9 @@ export function ChainGame() {
   } = useChainStore();
 
   const [inputValue, setInputValue] = useState("");
-  const [feedbackState, setFeedbackState] = useState<FeedbackState>("neutral");
+  const [feedback, setFeedback] = useState<StepFeedback | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
-  const [stepStartTime, setStepStartTime] = useState<number | null>(null);
+  const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const currentStep = getCurrentStep();
   const progress = getProgress();
@@ -69,54 +75,58 @@ export function ChainGame() {
     return () => clearInterval(interval);
   }, [phase]);
 
-  // Reset input on step change
+  const clearFeedback = useCallback(() => {
+    if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
+    setFeedback(null);
+  }, []);
+
+  // Don't leave a pending timer behind when leaving this mode
   useEffect(() => {
-    setInputValue("");
-    setFeedbackState("neutral");
-    setStepStartTime(Date.now());
-  }, [currentStepIndex]);
+    return () => {
+      if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
+    };
+  }, []);
 
   const handleStartGame = useCallback(() => {
     startGame();
     setElapsedTime(0);
     setInputValue("");
-    setFeedbackState("neutral");
-  }, [startGame]);
+    clearFeedback();
+  }, [startGame, clearFeedback]);
 
   const handleSubmitAnswer = useCallback(() => {
-    if (!inputValue.trim() || feedbackState !== "neutral") return;
+    if (!currentStep || !inputValue.trim()) return;
 
     const answer = parseInt(inputValue, 10);
     if (isNaN(answer)) return;
 
     const isCorrect = submitAnswer(answer);
-    setFeedbackState(isCorrect ? "correct" : "incorrect");
 
-    // Auto-advance after feedback
-    setTimeout(() => {
-      setInputValue("");
-      setFeedbackState("neutral");
-    }, isCorrect ? 600 : 1000);
-  }, [inputValue, feedbackState, submitAnswer]);
+    // Clear now so the next answer can be typed straight away. The timer only
+    // hides the message; it must never touch the input.
+    setInputValue("");
+    if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
+    setFeedback({
+      stepNumber: currentStep.stepNumber,
+      isCorrect,
+      workedAnswer: `${currentStep.previousResult.toLocaleString()} + ${currentStep.addend.toLocaleString()} = ${currentStep.result.toLocaleString()}`,
+    });
+    feedbackTimer.current = setTimeout(() => setFeedback(null), isCorrect ? 600 : 1500);
+  }, [currentStep, inputValue, submitAnswer]);
 
   const handleSkip = useCallback(() => {
-    if (feedbackState !== "neutral") return;
     skipStep();
     setInputValue("");
-  }, [feedbackState, skipStep]);
+    clearFeedback();
+  }, [skipStep, clearFeedback]);
 
-  const handleDigit = useCallback(
-    (digit: string) => {
-      if (feedbackState !== "neutral") return;
-      setInputValue((prev) => prev + digit);
-    },
-    [feedbackState]
-  );
+  const handleDigit = useCallback((digit: string) => {
+    setInputValue((prev) => prev + digit);
+  }, []);
 
   const handleDelete = useCallback(() => {
-    if (feedbackState !== "neutral") return;
     setInputValue((prev) => prev.slice(0, -1));
-  }, [feedbackState]);
+  }, []);
 
   const adjustDifficulty = (delta: number) => {
     const newDiff = Math.max(1, Math.min(5, difficulty + delta)) as ChainDifficulty;
@@ -149,8 +159,6 @@ export function ChainGame() {
         return;
       }
 
-      if (feedbackState !== "neutral") return;
-
       if (e.key >= "0" && e.key <= "9") {
         handleDigit(e.key);
       } else if (e.key === "Backspace") {
@@ -167,7 +175,6 @@ export function ChainGame() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [
     phase,
-    feedbackState,
     inputValue,
     handleStartGame,
     handleSubmitAnswer,
@@ -178,11 +185,14 @@ export function ChainGame() {
     endGame,
   ]);
 
-  const inputStyles = {
-    neutral: "border-soft-slate/30",
-    correct: "border-success bg-success/10 text-success",
-    incorrect: "border-error bg-error/10 text-error animate-shake",
-  };
+  // Colour the box only until the next answer is started, so a red flash from
+  // the last step never looks like a verdict on what is being typed now.
+  let answerBoxStyle = "border-soft-slate/30";
+  if (feedback && !inputValue) {
+    answerBoxStyle = feedback.isCorrect
+      ? "border-success bg-success/10"
+      : "border-error bg-error/10 animate-shake";
+  }
 
   // Calculate correct count for display
   const correctCount = useMemo(
@@ -379,7 +389,7 @@ export function ChainGame() {
                 min-h-[56px]
                 flex items-center justify-center
                 transition-all duration-200
-                ${inputStyles[feedbackState]}
+                ${answerBoxStyle}
               `}
             >
               {inputValue || (
@@ -387,27 +397,21 @@ export function ChainGame() {
               )}
             </div>
 
-            {/* Feedback message */}
-            <AnimatePresence>
-              {feedbackState !== "neutral" && (
-                <motion.div
+            {/* Fixed height so the numpad doesn't jump while the next answer is typed */}
+            <div className="h-6 mt-2 text-center">
+              {feedback && (
+                <motion.p
+                  key={feedback.stepNumber}
                   initial={{ opacity: 0, y: -5 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="text-center mt-2"
+                  className={`text-sm font-medium ${
+                    feedback.isCorrect ? "text-success" : "text-error"
+                  }`}
                 >
-                  <p
-                    className={`text-sm font-medium ${
-                      feedbackState === "correct" ? "text-success" : "text-error"
-                    }`}
-                  >
-                    {feedbackState === "correct"
-                      ? "Correct! 🔗"
-                      : `Answer: ${currentStep.result.toLocaleString()}`}
-                  </p>
-                </motion.div>
+                  {feedback.isCorrect ? "Correct! 🔗" : feedback.workedAnswer}
+                </motion.p>
               )}
-            </AnimatePresence>
+            </div>
           </div>
         </div>
 
@@ -417,7 +421,6 @@ export function ChainGame() {
           onDecimal={() => {}}
           onDelete={handleDelete}
           onEnter={handleSubmitAnswer}
-          disabled={feedbackState !== "neutral"}
           showDecimal={false}
           showNegative={false}
         />
@@ -436,7 +439,6 @@ export function ChainGame() {
             variant="ghost"
             size="sm"
             onClick={handleSkip}
-            disabled={feedbackState !== "neutral"}
             icon={<SkipForward className="w-4 h-4" />}
           >
             Skip
