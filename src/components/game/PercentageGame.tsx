@@ -13,6 +13,7 @@ import {
   PercentageDifficulty,
   getPercentageDifficultyDescription,
 } from "@/lib/engines/percentageEngine";
+import { useCancellableTimeout } from "@/hooks/useCancellableTimeout";
 
 type FeedbackState = "neutral" | "correct" | "incorrect";
 
@@ -27,6 +28,7 @@ export function PercentageGame() {
   const [currentStreak, setCurrentStreak] = useState(0);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
+  const { schedule: scheduleNextProblem, cancel: cancelNextProblem } = useCancellableTimeout();
 
   // Timer effect
   useEffect(() => {
@@ -57,6 +59,7 @@ export function PercentageGame() {
   }, [generateNewProblem]);
 
   const resetGame = useCallback(() => {
+    cancelNextProblem();
     setIsPlaying(false);
     setProblem(null);
     setFeedbackState("neutral");
@@ -66,7 +69,7 @@ export function PercentageGame() {
     setCurrentStreak(0);
     setStartTime(null);
     setElapsedTime(0);
-  }, []);
+  }, [cancelNextProblem]);
 
   const handleSubmitAnswer = useCallback(() => {
     if (!problem || !inputValue.trim()) return;
@@ -86,10 +89,8 @@ export function PercentageGame() {
     }
 
     // Move to next question after delay
-    setTimeout(() => {
-      generateNewProblem();
-    }, isCorrect ? 1000 : 1500);
-  }, [problem, inputValue, generateNewProblem]);
+    scheduleNextProblem(generateNewProblem, isCorrect ? 1000 : 1500);
+  }, [problem, inputValue, generateNewProblem, scheduleNextProblem]);
 
   const handleDigit = useCallback((digit: string) => {
     if (feedbackState !== "neutral") return;

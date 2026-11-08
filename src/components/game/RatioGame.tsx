@@ -11,6 +11,7 @@ import {
   RatioDifficulty,
   getRatioDifficultyDescription,
 } from "@/lib/engines/ratioEngine";
+import { useCancellableTimeout } from "@/hooks/useCancellableTimeout";
 
 type FeedbackState = "neutral" | "correct" | "incorrect";
 
@@ -25,6 +26,7 @@ export function RatioGame() {
   const [currentStreak, setCurrentStreak] = useState(0);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
+  const { schedule: scheduleNextProblem, cancel: cancelNextProblem } = useCancellableTimeout();
 
   // Timer effect
   useEffect(() => {
@@ -55,6 +57,7 @@ export function RatioGame() {
   }, [generateNewProblem]);
 
   const resetGame = useCallback(() => {
+    cancelNextProblem();
     setIsPlaying(false);
     setProblem(null);
     setFeedbackState("neutral");
@@ -64,7 +67,7 @@ export function RatioGame() {
     setCurrentStreak(0);
     setStartTime(null);
     setElapsedTime(0);
-  }, []);
+  }, [cancelNextProblem]);
 
   const handleAnswer = useCallback((answer: "A" | "B") => {
     if (!problem || feedbackState !== "neutral") return;
@@ -82,10 +85,8 @@ export function RatioGame() {
     }
 
     // Auto-advance to next question
-    setTimeout(() => {
-      generateNewProblem();
-    }, isCorrect ? 800 : 1200);
-  }, [problem, feedbackState, generateNewProblem]);
+    scheduleNextProblem(generateNewProblem, isCorrect ? 800 : 1200);
+  }, [problem, feedbackState, generateNewProblem, scheduleNextProblem]);
 
   const adjustDifficulty = (delta: number) => {
     const newDiff = Math.max(1, Math.min(5, difficulty + delta)) as RatioDifficulty;

@@ -9,6 +9,7 @@ import { NumPad } from "@/components/ui/NumPad";
 import { MathQuestion } from "./MathQuestion";
 import { generateProblem, MathProblem, Operation, Difficulty, getDifficultyDescription } from "@/lib/engines/mathEngine";
 import { useGameStore } from "@/lib/store";
+import { useCancellableTimeout } from "@/hooks/useCancellableTimeout";
 
 type FeedbackState = "neutral" | "correct" | "incorrect";
 
@@ -24,6 +25,7 @@ export function MathGame() {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const { schedule: scheduleNextProblem, cancel: cancelNextProblem } = useCancellableTimeout();
 
   // Timer effect
   useEffect(() => {
@@ -39,6 +41,8 @@ export function MathGame() {
   const generateNewProblem = useCallback(() => {
     const newProblem = generateProblem(operation, difficulty);
     setProblem(newProblem);
+    // Starts this question's clock, so it has to run when the question appears
+    useGameStore.getState().setQuestion(newProblem.question, newProblem.answer);
     setFeedbackState("neutral");
     setInputValue("");
   }, [operation, difficulty]);
@@ -53,6 +57,7 @@ export function MathGame() {
   }, [generateNewProblem]);
 
   const resetGame = useCallback(() => {
+    cancelNextProblem();
     setIsPlaying(false);
     setProblem(null);
     setFeedbackState("neutral");
@@ -61,7 +66,7 @@ export function MathGame() {
     setStartTime(null);
     setElapsedTime(0);
     setInputValue("");
-  }, []);
+  }, [cancelNextProblem]);
 
   const handleSubmitAnswer = useCallback(() => {
     if (!problem || !inputValue.trim()) return;
@@ -78,14 +83,11 @@ export function MathGame() {
     }
 
     // Update global store
-    useGameStore.getState().setQuestion(problem.question, problem.answer);
     submitAnswer(answer);
 
     // Move to next question after brief delay
-    setTimeout(() => {
-      generateNewProblem();
-    }, isCorrect ? 800 : 1200);
-  }, [problem, inputValue, generateNewProblem, submitAnswer]);
+    scheduleNextProblem(generateNewProblem, isCorrect ? 800 : 1200);
+  }, [problem, inputValue, generateNewProblem, submitAnswer, scheduleNextProblem]);
 
   const handleDigit = useCallback((digit: string) => {
     if (feedbackState !== "neutral") return;

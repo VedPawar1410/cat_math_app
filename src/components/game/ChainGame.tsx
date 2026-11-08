@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Play,
@@ -21,6 +21,7 @@ import { GameCard, GameCardHeader, GameCardContent, GameCardFooter } from "@/com
 import { Button } from "@/components/ui/Button";
 import { NumPad } from "@/components/ui/NumPad";
 import { useChainStore } from "@/lib/chainStore";
+import { useCancellableTimeout } from "@/hooks/useCancellableTimeout";
 import { getChainDifficultyDescription, ChainDifficulty } from "@/lib/engines/chainEngine";
 
 // The store moves to the next step as soon as an answer is submitted, so
@@ -55,7 +56,7 @@ export function ChainGame() {
   const [inputValue, setInputValue] = useState("");
   const [feedback, setFeedback] = useState<StepFeedback | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
-  const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { schedule: scheduleHideFeedback, cancel: cancelHideFeedback } = useCancellableTimeout();
 
   const currentStep = getCurrentStep();
   const progress = getProgress();
@@ -76,16 +77,9 @@ export function ChainGame() {
   }, [phase]);
 
   const clearFeedback = useCallback(() => {
-    if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
+    cancelHideFeedback();
     setFeedback(null);
-  }, []);
-
-  // Don't leave a pending timer behind when leaving this mode
-  useEffect(() => {
-    return () => {
-      if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
-    };
-  }, []);
+  }, [cancelHideFeedback]);
 
   const handleStartGame = useCallback(() => {
     startGame();
@@ -105,14 +99,13 @@ export function ChainGame() {
     // Clear now so the next answer can be typed straight away. The timer only
     // hides the message; it must never touch the input.
     setInputValue("");
-    if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
     setFeedback({
       stepNumber: currentStep.stepNumber,
       isCorrect,
       workedAnswer: `${currentStep.previousResult.toLocaleString()} + ${currentStep.addend.toLocaleString()} = ${currentStep.result.toLocaleString()}`,
     });
-    feedbackTimer.current = setTimeout(() => setFeedback(null), isCorrect ? 600 : 1500);
-  }, [currentStep, inputValue, submitAnswer]);
+    scheduleHideFeedback(() => setFeedback(null), isCorrect ? 600 : 1500);
+  }, [currentStep, inputValue, submitAnswer, scheduleHideFeedback]);
 
   const handleSkip = useCallback(() => {
     skipStep();

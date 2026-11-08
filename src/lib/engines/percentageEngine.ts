@@ -42,9 +42,10 @@ function randomInRange(min: number, max: number): number {
  * Returns value rounded to specified decimal places
  */
 export function calculatePercentage(numerator: number, denominator: number, decimalPlaces: 1 | 2 = 2): number {
-  const percentage = (numerator / denominator) * 100;
+  // Multiply before dividing: (23 / 80) * 100 lands just under 28.75 in
+  // floating point and would wrongly round down to 28.7.
   const multiplier = Math.pow(10, decimalPlaces);
-  return Math.round(percentage * multiplier) / multiplier;
+  return Math.round((numerator * 100 * multiplier) / denominator) / multiplier;
 }
 
 /**
