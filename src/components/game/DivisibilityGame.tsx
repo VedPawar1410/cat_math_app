@@ -76,19 +76,17 @@ export function DivisibilityGame() {
     return () => clearInterval(interval);
   }, [phase]);
 
-  // Reset remainder input when moving to new problem
-  useEffect(() => {
+  const resetProblemInputs = useCallback(() => {
     setRemainderInput("");
     setRemainderResult("pending");
     setShowHint(false);
-  }, [problemCount]);
+  }, []);
 
   const handleStartGame = useCallback(() => {
     startGame();
     setElapsedTime(0);
-    setRemainderInput("");
-    setRemainderResult("pending");
-  }, [startGame]);
+    resetProblemInputs();
+  }, [startGame, resetProblemInputs]);
 
   const handleDivisibilityAnswer = useCallback(
     (isDivisible: boolean) => {
@@ -141,8 +139,9 @@ export function DivisibilityGame() {
       endGame();
     } else {
       nextProblem();
+      resetProblemInputs();
     }
-  }, [problemCount, maxProblems, endGame, nextProblem]);
+  }, [problemCount, maxProblems, endGame, nextProblem, resetProblemInputs]);
 
   const adjustDifficulty = (delta: number) => {
     const newDiff = Math.max(1, Math.min(5, difficulty + delta)) as DivisibilityDifficulty;

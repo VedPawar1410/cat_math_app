@@ -13,17 +13,17 @@
  *   - https://www.pwabuilder.com/imageGenerator
  * 
  * Usage:
- *   node scripts/generate-icons.js
+ *   node scripts/generate-icons.mjs
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from "fs";
+import path from "path";
 
 // Check if sharp is available
 let sharp;
 try {
-  sharp = require('sharp');
-} catch (e) {
+  sharp = (await import("sharp")).default;
+} catch {
   console.log(`
 ╔═══════════════════════════════════════════════════════════════════╗
 ║                    PWA Icon Generator                              ║
@@ -34,7 +34,7 @@ try {
 ║  OPTION 1: Install sharp and run this script                       ║
 ║  ──────────────────────────────────────────────────────────────    ║
 ║    npm install sharp                                               ║
-║    node scripts/generate-icons.js                                  ║
+║    node scripts/generate-icons.mjs                                  ║
 ║                                                                    ║
 ║  OPTION 2: Use online tools (recommended for quick setup)          ║
 ║  ──────────────────────────────────────────────────────────────    ║
@@ -61,7 +61,7 @@ try {
   process.exit(0);
 }
 
-const ICONS_DIR = path.join(__dirname, '..', 'public', 'icons');
+const ICONS_DIR = path.join(import.meta.dirname, '..', 'public', 'icons');
 const SVG_PATH = path.join(ICONS_DIR, 'icon.svg');
 const MASKABLE_SVG_PATH = path.join(ICONS_DIR, 'icon-maskable.svg');
 

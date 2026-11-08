@@ -62,8 +62,8 @@ export function generateAddition(difficulty: Difficulty): MathProblem {
  */
 export function generateSubtraction(difficulty: Difficulty): MathProblem {
   const config = DIFFICULTY_CONFIG[difficulty];
-  let num1 = generateNumberWithDigits(config.digits1);
-  let num2 = generateNumberWithDigits(config.digits2);
+  const num1 = generateNumberWithDigits(config.digits1);
+  const num2 = generateNumberWithDigits(config.digits2);
 
   // Ensure we subtract smaller from larger for positive result
   const operand1 = Math.max(num1, num2);

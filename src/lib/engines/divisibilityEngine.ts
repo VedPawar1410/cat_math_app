@@ -63,9 +63,6 @@ const difficultyRanges: Record<DivisibilityDifficulty, {
   },
 };
 
-// Common divisibility-friendly divisors for generating exact division problems
-const commonDivisors = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 20, 25];
-
 /**
  * Generate a random integer within a range (inclusive)
  */

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, RotateCcw, Flame, Target, Clock, ChevronUp, ChevronDown } from "lucide-react";
 import { GameCard, GameCardHeader, GameCardContent, GameCardFooter } from "@/components/ui/GameCard";
@@ -28,7 +28,6 @@ export function MathGame() {
   const [startTime, setStartTime] = useState<number | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [inputValue, setInputValue] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
   const { schedule: scheduleNextProblem, cancel: cancelNextProblem } = useCancellableTimeout();
   const { startSession, markQuestionShown, recordAnswer, finishSession } = useSessionRecorder();
   const [summary, setSummary] = useState<SessionResult | null>(null);
