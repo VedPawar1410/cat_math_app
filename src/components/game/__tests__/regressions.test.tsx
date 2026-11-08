@@ -125,7 +125,9 @@ describe("MathGame", () => {
     render(<MathGame />);
     press("Enter");
     advance(2000);
-    answerWithKeypad();
+    // Always wrong: a fixed guess like 1 can be right (45 - 44)
+    type(useGameStore.getState().currentAnswer! + 1);
+    press("Enter");
     press("Escape");
     expect(screen.getByText("2s")).toBeTruthy();
     expect(screen.getByText("0/1")).toBeTruthy();
