@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, RotateCcw, Flame, Scale, Clock, ChevronUp, ChevronDown } from "lucide-react";
+import { Play, Flame, Scale, Clock, ChevronUp, ChevronDown } from "lucide-react";
 import { GameCard, GameCardHeader, GameCardContent, GameCardFooter } from "@/components/ui/GameCard";
 import { Button } from "@/components/ui/Button";
 import {
@@ -17,6 +17,7 @@ import { usePracticeStore } from "@/lib/practiceStore";
 import { SessionSummary } from "./SessionSummary";
 import { StatsPreview } from "@/components/ui/StatsPreview";
 import { ScreenReaderStatus } from "@/components/ui/ScreenReaderStatus";
+import { EndSessionButton } from "@/components/ui/EndSessionButton";
 
 type FeedbackState = "neutral" | "correct" | "incorrect";
 
@@ -250,10 +251,13 @@ export function RatioGame() {
                 <span className="font-mono text-sm font-bold">{currentStreak}</span>
               </div>
             </div>
-            <div className="text-sm text-text-secondary">
-              <span className="text-success font-bold">{sessionCorrect}</span>
-              <span className="mx-1">/</span>
-              <span>{questionCount}</span>
+            <div className="flex items-center gap-3">
+              <div className="text-sm text-text-secondary">
+                <span className="text-success font-bold">{sessionCorrect}</span>
+                <span className="mx-1">/</span>
+                <span>{questionCount}</span>
+              </div>
+              <EndSessionButton onClick={endSession} />
             </div>
           </div>
 
@@ -407,18 +411,6 @@ export function RatioGame() {
               </motion.div>
             )}
           </AnimatePresence>
-
-          {/* Reset button */}
-          <GameCardFooter className="flex justify-center mt-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={endSession}
-              icon={<RotateCcw className="w-4 h-4" />}
-            >
-              End Session
-            </Button>
-          </GameCardFooter>
         </>
       )}
     </GameCard>

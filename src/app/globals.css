@@ -196,19 +196,23 @@ body {
 
 /* PWA standalone mode specific styles */
 @media all and (display-mode: standalone) {
+  /* Stops pull-to-refresh. Don't set overflow here: hiding it on html while body
+     grows with its content leaves the installed app unable to scroll at all. */
+  html,
   body {
-    /* Extra visual cue that we're in app mode */
     overscroll-behavior-y: none;
   }
-  
-  /* Prevent pull-to-refresh on iOS */
-  html {
-    overflow: hidden;
-  }
-  
-  body {
-    overflow: auto;
-    -webkit-overflow-scrolling: touch;
+}
+
+/* During a session, give the game the whole screen */
+main:has([data-session-active]) > .app-chrome {
+  display: none;
+}
+
+/* Short phones also need the mode tabs' space; the End button is the way out */
+@media (max-height: 700px) {
+  main:has([data-session-active]) > .app-modes {
+    display: none;
   }
 }
 

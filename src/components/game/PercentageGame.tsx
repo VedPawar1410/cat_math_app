@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, RotateCcw, Flame, Percent, Clock, ChevronUp, ChevronDown } from "lucide-react";
+import { Play, Flame, Percent, Clock, ChevronUp, ChevronDown } from "lucide-react";
 import { GameCard, GameCardHeader, GameCardContent, GameCardFooter } from "@/components/ui/GameCard";
 import { Button } from "@/components/ui/Button";
 import { NumPad } from "@/components/ui/NumPad";
@@ -19,6 +19,7 @@ import { usePracticeStore } from "@/lib/practiceStore";
 import { SessionSummary } from "./SessionSummary";
 import { StatsPreview } from "@/components/ui/StatsPreview";
 import { ScreenReaderStatus } from "@/components/ui/ScreenReaderStatus";
+import { EndSessionButton } from "@/components/ui/EndSessionButton";
 
 type FeedbackState = "neutral" | "correct" | "incorrect";
 
@@ -283,10 +284,13 @@ export function PercentageGame() {
                 <span className="font-mono text-sm font-bold">{currentStreak}</span>
               </div>
             </div>
-            <div className="text-sm text-text-secondary">
-              <span className="text-success font-bold">{sessionCorrect}</span>
-              <span className="mx-1">/</span>
-              <span>{questionCount}</span>
+            <div className="flex items-center gap-3">
+              <div className="text-sm text-text-secondary">
+                <span className="text-success font-bold">{sessionCorrect}</span>
+                <span className="mx-1">/</span>
+                <span>{questionCount}</span>
+              </div>
+              <EndSessionButton onClick={endSession} />
             </div>
           </div>
 
@@ -299,7 +303,7 @@ export function PercentageGame() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -20, scale: 0.95 }}
                 transition={{ duration: 0.3 }}
-                className="text-center py-4"
+                className="text-center py-1"
               >
                 {/* Fraction display */}
                 <div className="inline-flex flex-col items-center">
@@ -315,7 +319,7 @@ export function PercentageGame() {
                     initial={{ scaleX: 0 }}
                     animate={{ scaleX: 1 }}
                     transition={{ delay: 0.15 }}
-                    className="w-full h-1 bg-neon-indigo rounded-full my-2"
+                    className="w-full h-1 bg-neon-indigo rounded-full my-1"
                   />
                   <motion.span
                     initial={{ opacity: 0 }}
@@ -332,7 +336,7 @@ export function PercentageGame() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.25 }}
-                  className="flex items-center justify-center gap-2 mt-3 text-xl text-text-muted"
+                  className="flex items-center justify-center gap-2 mt-1 text-xl text-text-muted"
                 >
                   <span>=</span>
                   <span className="text-neon-indigo-glow">?</span>
@@ -344,7 +348,7 @@ export function PercentageGame() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="mt-2"
+                  className="mt-1"
                 >
                   <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-charcoal-medium text-text-muted border border-soft-slate/30">
                     Level {problem.difficulty} · {problem.decimalPlaces} decimal{problem.decimalPlaces > 1 ? "s" : ""}
@@ -355,7 +359,7 @@ export function PercentageGame() {
           </AnimatePresence>
 
           {/* Answer display */}
-          <div className="mt-2">
+          <div className="mt-1">
             <div className="w-full max-w-xs mx-auto">
               <div className="relative">
                 <div
@@ -378,14 +382,15 @@ export function PercentageGame() {
                 </span>
               </div>
 
-              {/* Feedback message */}
+              {/* Fixed height so the numpad doesn't jump when feedback appears */}
+              <div className="h-5 mt-1">
               <AnimatePresence>
                 {feedbackState !== "neutral" && problem && (
                   <motion.div
                     initial={{ opacity: 0, y: -5 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
-                    className="text-center mt-2"
+                    className="text-center"
                   >
                     <p className={`text-sm font-medium ${
                       feedbackState === "correct" ? "text-success" : "text-error"
@@ -395,6 +400,7 @@ export function PercentageGame() {
                   </motion.div>
                 )}
               </AnimatePresence>
+              </div>
             </div>
           </div>
 
@@ -407,18 +413,6 @@ export function PercentageGame() {
             disabled={feedbackState !== "neutral"}
             showDecimal={true}
           />
-
-          {/* Reset button */}
-          <GameCardFooter className="flex justify-center mt-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={endSession}
-              icon={<RotateCcw className="w-4 h-4" />}
-            >
-              End Session
-            </Button>
-          </GameCardFooter>
         </>
       )}
     </GameCard>

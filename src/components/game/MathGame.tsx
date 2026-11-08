@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, RotateCcw, Flame, Target, Clock, ChevronUp, ChevronDown } from "lucide-react";
+import { Play, Flame, Target, Clock, ChevronUp, ChevronDown } from "lucide-react";
 import { GameCard, GameCardHeader, GameCardContent, GameCardFooter } from "@/components/ui/GameCard";
 import { Button } from "@/components/ui/Button";
 import { NumPad } from "@/components/ui/NumPad";
@@ -14,6 +14,7 @@ import { useSessionRecorder, SessionResult } from "@/hooks/useSessionRecorder";
 import { SessionSummary } from "./SessionSummary";
 import { StatsPreview } from "@/components/ui/StatsPreview";
 import { ScreenReaderStatus } from "@/components/ui/ScreenReaderStatus";
+import { EndSessionButton } from "@/components/ui/EndSessionButton";
 
 type FeedbackState = "neutral" | "correct" | "incorrect";
 
@@ -291,11 +292,14 @@ export function MathGame() {
               </div>
             </div>
 
-            {/* Score */}
-            <div className="text-sm text-text-secondary">
-              <span className="text-success font-bold">{sessionCorrect}</span>
-              <span className="mx-1">/</span>
-              <span>{questionCount}</span>
+            <div className="flex items-center gap-3">
+              {/* Score */}
+              <div className="text-sm text-text-secondary">
+                <span className="text-success font-bold">{sessionCorrect}</span>
+                <span className="mx-1">/</span>
+                <span>{questionCount}</span>
+              </div>
+              <EndSessionButton onClick={endSession} />
             </div>
           </div>
 
@@ -321,14 +325,15 @@ export function MathGame() {
                 {inputValue || <span className="text-text-muted">Your answer</span>}
               </div>
 
-              {/* Feedback message */}
+              {/* Fixed height so the numpad doesn't jump when feedback appears */}
+              <div className="h-5 mt-1">
               <AnimatePresence>
                 {feedbackState !== "neutral" && problem && (
                   <motion.div
                     initial={{ opacity: 0, y: -5 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
-                    className="text-center mt-2"
+                    className="text-center"
                   >
                     <p className={`text-sm font-medium ${
                       feedbackState === "correct" ? "text-success" : "text-error"
@@ -338,6 +343,7 @@ export function MathGame() {
                   </motion.div>
                 )}
               </AnimatePresence>
+              </div>
             </div>
           </div>
 
@@ -351,18 +357,6 @@ export function MathGame() {
             showDecimal={false}
             showNegative={true}
           />
-
-          {/* Reset button */}
-          <GameCardFooter className="flex justify-center mt-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={endSession}
-              icon={<RotateCcw className="w-4 h-4" />}
-            >
-              End Session
-            </Button>
-          </GameCardFooter>
         </>
       )}
     </GameCard>

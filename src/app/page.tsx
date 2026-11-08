@@ -62,13 +62,13 @@ export default function Home() {
   const activeMode = pickedMode ?? linkedMode ?? "math";
 
   return (
-    <main className="min-h-dvh flex flex-col items-center justify-center px-4 py-8 sm:py-12">
+    <main className="min-h-[calc(100dvh-var(--sat)-var(--sab))] flex flex-col items-center justify-center px-4 py-4 sm:py-12">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="text-center mb-6"
+        className="app-chrome text-center mb-6"
       >
         <motion.div
           initial={{ scale: 0 }}
@@ -91,7 +91,7 @@ export default function Home() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="flex gap-1.5 p-1.5 bg-charcoal-light rounded-xl mb-6 border border-soft-slate/20"
+        className="app-modes flex gap-1.5 p-1.5 bg-charcoal-light rounded-xl mb-4 border border-soft-slate/20"
       >
         {gameModes.map((mode) => (
           <button
@@ -134,7 +134,7 @@ export default function Home() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.8 }}
-        className="text-text-muted text-xs text-center mt-6"
+        className="app-chrome text-text-muted text-xs text-center mt-6"
       >
         <kbd className="px-1.5 py-0.5 rounded bg-charcoal-medium text-text-secondary font-mono text-[10px]">Enter</kbd> to start · <kbd className="px-1.5 py-0.5 rounded bg-charcoal-medium text-text-secondary font-mono text-[10px]">Esc</kbd> to reset
       </motion.p>

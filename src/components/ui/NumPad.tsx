@@ -79,7 +79,7 @@ export function NumPad({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
-      className="w-full max-w-xs mx-auto mt-4"
+      className="w-full max-w-xs mx-auto mt-2"
     >
       <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
         {/* Row 1: 1 2 3 */}

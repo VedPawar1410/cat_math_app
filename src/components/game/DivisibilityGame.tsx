@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Play,
-  RotateCcw,
   Divide,
   ChevronUp,
   ChevronDown,
@@ -21,6 +20,7 @@ import { Button } from "@/components/ui/Button";
 import { NumPad } from "@/components/ui/NumPad";
 import { useDivisibilityStore } from "@/lib/divisibilityStore";
 import { ScreenReaderStatus } from "@/components/ui/ScreenReaderStatus";
+import { EndSessionButton } from "@/components/ui/EndSessionButton";
 import {
   getDivisibilityDifficultyDescription,
   getDivisibilityHint,
@@ -396,7 +396,10 @@ export function DivisibilityGame() {
               {progress.current}/{progress.total}
             </span>
           </div>
-          <div className="text-sm text-text-muted">{sessionAccuracy}% accuracy</div>
+          <div className="flex items-center gap-3">
+            <div className="text-sm text-text-muted">{sessionAccuracy}% accuracy</div>
+            <EndSessionButton onClick={endGame} />
+          </div>
         </div>
 
         {/* Progress bar */}
@@ -474,12 +477,6 @@ export function DivisibilityGame() {
             No (N)
           </Button>
         </div>
-
-        <GameCardFooter className="flex justify-center">
-          <Button variant="ghost" size="sm" onClick={endGame} icon={<RotateCcw className="w-4 h-4" />}>
-            End Session
-          </Button>
-        </GameCardFooter>
       </GameCard>
     );
   }
@@ -499,10 +496,11 @@ export function DivisibilityGame() {
               {progress.current}/{progress.total}
             </span>
           </div>
-          <div
-            className={`text-sm font-medium ${divCorrect ? "text-success" : "text-error"}`}
-          >
-            {divCorrect ? "✓ Correct" : "✗ Incorrect"}
+          <div className="flex items-center gap-3">
+            <div className={`text-sm font-medium ${divCorrect ? "text-success" : "text-error"}`}>
+              {divCorrect ? "✓ Correct" : "✗ Incorrect"}
+            </div>
+            <EndSessionButton onClick={endGame} />
           </div>
         </div>
 
@@ -576,12 +574,6 @@ export function DivisibilityGame() {
           showDecimal={false}
           showNegative={acceptNegativeRemainders}
         />
-
-        <GameCardFooter className="flex justify-center mt-2">
-          <Button variant="ghost" size="sm" onClick={endGame} icon={<RotateCcw className="w-4 h-4" />}>
-            End Session
-          </Button>
-        </GameCardFooter>
       </GameCard>
     );
   }
@@ -597,9 +589,12 @@ export function DivisibilityGame() {
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <span className="text-sm text-text-secondary font-mono">{formatTime(elapsedTime)}</span>
-          <span className="text-sm text-neon-indigo-glow font-medium">
-            {progress.current}/{progress.total}
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-neon-indigo-glow font-medium">
+              {progress.current}/{progress.total}
+            </span>
+            <EndSessionButton onClick={endGame} />
+          </div>
         </div>
 
         {/* Result summary */}

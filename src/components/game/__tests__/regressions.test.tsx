@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { readFileSync } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, fireEvent, render, renderHook, screen } from "@testing-library/react";
 import { ChainGame } from "../ChainGame";
@@ -117,6 +118,48 @@ describe.each([
     press("Escape");
     expect(screen.getByText("Start Practice")).toBeTruthy();
     expect(screen.queryByText("Session Finished")).toBeNull();
+  });
+
+  it("has a tappable End button during play that shows the summary", () => {
+    render(<Game />);
+    press("Enter");
+    answer();
+    fireEvent.click(screen.getByRole("button", { name: "End session" }));
+    expect(screen.getByText("Session Finished")).toBeTruthy();
+  });
+});
+
+describe("End button in the step-based modes", () => {
+  const endButton = () => screen.getByRole("button", { name: "End session" });
+
+  it("Chain: ends the chain early", () => {
+    render(<ChainGame />);
+    press("Enter");
+    type(1);
+    press("Enter");
+    fireEvent.click(endButton());
+    expect(screen.getByText("Chain Ended")).toBeTruthy();
+  });
+
+  it("Divisibility: is available on all three steps of a problem", () => {
+    render(<DivisibilityGame />);
+    press("Enter");
+    expect(endButton()).toBeTruthy(); // Is it divisible?
+    press("n");
+    expect(endButton()).toBeTruthy(); // What is the remainder?
+    type(9);
+    press("Enter");
+    fireEvent.click(endButton()); // Feedback
+    expect(screen.getByText("Session Ended")).toBeTruthy();
+  });
+});
+
+describe("installed app layout", () => {
+  it("doesn't set overflow in standalone mode, which stops the app scrolling", () => {
+    const css = readFileSync("src/app/globals.css", "utf8");
+    const standalone = css.match(/display-mode:\s*standalone\)\s*\{[\s\S]*?\n\}/)?.[0];
+    expect(standalone).toBeTruthy();
+    expect(standalone).not.toMatch(/overflow:\s*(hidden|auto|scroll)/);
   });
 });
 

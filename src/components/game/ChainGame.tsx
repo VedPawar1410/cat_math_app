@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Play,
-  RotateCcw,
   Link2,
   Trophy,
   Clock,
@@ -23,6 +22,7 @@ import { NumPad } from "@/components/ui/NumPad";
 import { useChainStore } from "@/lib/chainStore";
 import { useCancellableTimeout } from "@/hooks/useCancellableTimeout";
 import { ScreenReaderStatus } from "@/components/ui/ScreenReaderStatus";
+import { EndSessionButton } from "@/components/ui/EndSessionButton";
 import { getChainDifficultyDescription, ChainDifficulty } from "@/lib/engines/chainEngine";
 
 // The store moves to the next step as soon as an answer is submitted, so
@@ -351,11 +351,14 @@ export function ChainGame() {
             </div>
           </div>
 
-          {/* Score */}
-          <div className="text-sm text-text-secondary">
-            <span className="text-success font-bold">{correctCount}</span>
-            <span className="mx-1">/</span>
-            <span>{stepResults.length}</span>
+          <div className="flex items-center gap-3">
+            {/* Score */}
+            <div className="text-sm text-text-secondary">
+              <span className="text-success font-bold">{correctCount}</span>
+              <span className="mx-1">/</span>
+              <span>{stepResults.length}</span>
+            </div>
+            <EndSessionButton onClick={endGame} />
           </div>
         </div>
 
@@ -370,10 +373,18 @@ export function ChainGame() {
         </div>
 
         {/* Step indicator */}
-        <div className="text-center mb-2">
+        <div className="flex items-center justify-between mb-2">
           <span className="text-xs text-text-muted font-medium uppercase tracking-wider">
             Step {currentStep.stepNumber}
           </span>
+          <button
+            type="button"
+            onClick={handleSkip}
+            className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium text-text-secondary hover:text-text-primary transition-colors"
+          >
+            <SkipForward className="w-3.5 h-3.5" />
+            Skip
+          </button>
         </div>
 
         {/* Question display */}
@@ -412,7 +423,7 @@ export function ChainGame() {
             </div>
 
             {/* Fixed height so the numpad doesn't jump while the next answer is typed */}
-            <div className="h-6 mt-2 text-center">
+            <div className="h-5 mt-1 text-center">
               {feedback && (
                 <motion.p
                   key={feedback.stepNumber}
@@ -438,26 +449,6 @@ export function ChainGame() {
           showDecimal={false}
           showNegative={false}
         />
-
-        {/* Action buttons */}
-        <GameCardFooter className="flex justify-between mt-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => endGame()}
-            icon={<RotateCcw className="w-4 h-4" />}
-          >
-            End
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleSkip}
-            icon={<SkipForward className="w-4 h-4" />}
-          >
-            Skip
-          </Button>
-        </GameCardFooter>
       </GameCard>
     );
   }

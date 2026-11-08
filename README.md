@@ -6,7 +6,7 @@ A keyboard-first mental math trainer for CAT and similar exams, with five drill 
 
 | Headline metric | Result |
 |---|---|
-| Automated tests | 69 passing |
+| Automated tests | 75 passing |
 | Percentage grading | 0 errors across all 78,908 level/question combinations |
 | Lighthouse (mobile, production) | Accessibility 100, Best Practices 100, SEO 100 |
 | axe WCAG A/AA | 0 violations across 18 screens |
@@ -69,7 +69,9 @@ Measured on 8 November 2026. Lighthouse and load figures come from the productio
 
 | Check | Before | After |
 |---|---|---|
-| Tests | 0 | 69 |
+| Tests | 0 | 75 |
+| Installed iPhone app can scroll | No, the bottom was cut off | Yes |
+| Enter and End on a 390x844 screen, measured in Chrome | End off screen in 4 of 5 modes | On screen in every mode, no scrolling |
 | Percentage combinations graded wrongly | 18 of 78,908 | 0 of 78,908 |
 | Service worker | Never registered | Active on production |
 | Offline | Browser error page | All 5 modes start |
@@ -87,7 +89,7 @@ Measured on 8 November 2026. Lighthouse and load figures come from the productio
 
 Generated answers were also simulated before the rebuild: 250,000 questions each for Math, Ratio and Divisibility, and 25,000 chains, with 0 wrong answers.
 
-To check that the tests catch real bugs, I reintroduced 7 of them one at a time, covering rounding, timers, Chain feedback, question timing and input resets. Each one made at least one test fail.
+To check that the tests catch real bugs, I reintroduced 8 of them one at a time, covering rounding, timers, Chain feedback, question timing, input resets and the iPhone scroll lock. Each one made at least one test fail.
 
 ## Project structure
 
@@ -110,6 +112,7 @@ src/
       __tests__/                UI regression tests
     ui/
       Button.tsx, GameCard.tsx  Shared UI pieces
+      EndSessionButton.tsx      Always-visible way out of a session
       NumPad.tsx                On-screen number pad
       ScreenReaderStatus.tsx    Live region for announcements
       StatsPreview.tsx          Lifetime stats on the setup screen
@@ -168,7 +171,9 @@ Hosted on Vercel, and every push to `main` deploys to production.
 - Difficulty is chosen manually. It doesn't adapt to how you're doing.
 - First-visit load on a slow phone is still about 3.6 s in the lab. Only repeat visits got faster.
 - 18 advisories remain in the production dependency tree. Most look like `next-pwa` build tooling (workbox, rollup, babel), but I haven't traced each one. `next-pwa` itself is unmaintained.
-- Not tested on a real iPhone or with a real screen reader. Announcements were checked by reading the live region.
+- On a real iPhone I've checked installing to the Home Screen, opening offline, the mode tabs, fast numpad taps and pinch-zoom. The later layout fix was measured in Chrome at iPhone sizes and hasn't been re-checked on the phone.
+- On a 375x667 phone, Enter and End stay on screen but some modes need a few pixels of scrolling.
+- Not tested with a real screen reader. Announcements were checked by reading the live region.
 - Ratio levels are defined only by the percentage gap. The two ratios aren't guaranteed to share a 10% or 1% band: at level 5, 89% share a 10% band and 11% share a 1% band.
 - Percentage answers must be rounded exactly, so a close estimate counts as wrong.
 - Older saved Math stats contain 0-second times. They aren't displayed.
@@ -229,6 +234,24 @@ I built this in layers while preparing for CAT, then came back to it ten months 
 
 *Known gaps I chose not to fix:* `next-pwa` is unmaintained and carries most of the remaining advisories. First-visit load is still slow. Five game components still share a lot of duplicated code. There's no CI.
 
+### Layer 4 - The iPhone test (November 2026, a real iPhone and Chrome at iPhone sizes)
+
+*What I did:* Installed the app on my iPhone for the first time since the rebuild. Offline worked, but two serious problems showed up that every earlier check had missed.
+
+| # | Mistake | What actually happened | Lesson |
+|---|---|---|---|
+| 4.1 | **A rule that only runs in the installed app** | Since January, `html { overflow: hidden }` applied only in standalone mode. The body grew to fit its content (1000 px, so it never scrolled), which left the app unable to scroll at all. | Code behind a condition needs testing in that condition. |
+| 4.2 | **The only exit was off screen** | End Session sat below the fold at 903-971 px on an 844 px screen, in 4 of 5 modes. Phones have no Esc key, so you couldn't leave a session. | Check that every action works with the input the device actually has. |
+| 4.3 | **Perfect scores on the wrong thing** | Lighthouse 100, axe clean on 18 screens and 69 passing tests, and none of them noticed. My 360 px check only looked for sideways overflow on one screen. | Automated scores measure what they measure. Use the product on the real device. |
+
+| # | Decision | Why |
+|---|---|---|
+| 4.4 | Removed `overflow` from the standalone rules and kept `overscroll-behavior` | Fixes 4.1 while still stopping pull-to-refresh |
+| 4.5 | One shared End button at the top of every game | Fixes 4.2, and it can't drift below the fold |
+| 4.6 | Hide the header during a session with CSS `:has()` watching for that button | Gives the game the screen without lifting game state up to the page |
+| 4.7 | Took the notch areas out of the page's minimum height | The page was as tall as the screen plus the safe areas, so it could never fit |
+| 4.8 | Added a test that fails if `overflow` returns to the standalone rules | Fixes the cause permanently, not just this time |
+
 ### Key takeaways
 
 1. **Claims need tests.** "PWA" sat in my README and config for ten months while offline had never worked once.
@@ -237,6 +260,7 @@ I built this in layers while preparing for CAT, then came back to it ten months 
 4. **Tests with random inputs need answers that can't be right by luck.** The suite failed once across dozens of runs. The likely cause was a test typing `1` as a wrong answer, when 45 − 44 is 1. I fixed that, but never reproduced the failure to confirm it.
 5. **Audit more than the landing page.** Lighthouse saw one screen. Scanning all 18 with axe found a real contrast problem it had missed.
 6. **The riskiest bugs are the ones nothing displays.** A timing stat stuck at 0 caused no visible problem at all.
+7. **Nothing replaces using it on the real device.** Two minutes on my iPhone found what perfect automated scores had missed.
 
 ## Future improvements
 
