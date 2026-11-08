@@ -65,7 +65,7 @@ export function MathQuestion({ problem, showAnswer = false }: MathQuestionProps)
             className="flex items-center justify-center gap-3 mt-4"
           >
             <span className="text-2xl sm:text-3xl text-text-muted">=</span>
-            <span className="text-3xl sm:text-4xl font-bold text-neon-indigo font-mono">
+            <span className="text-3xl sm:text-4xl font-bold text-neon-indigo-glow font-mono">
               {problem.answer}
             </span>
           </motion.div>

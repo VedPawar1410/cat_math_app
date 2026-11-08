@@ -98,7 +98,7 @@ export function AnswerInput({
             bg-charcoal-light
             border-2 rounded-xl
             transition-all duration-200
-            placeholder:text-text-muted/50
+            placeholder:text-text-muted
             disabled:opacity-50 disabled:cursor-not-allowed
             focus:outline-none focus:ring-2 focus:ring-neon-indigo/30
             ${inputStyles[feedbackState]}
@@ -115,7 +115,7 @@ export function AnswerInput({
             <button
               onClick={handleSubmitClick}
               disabled={disabled}
-              className="px-2 py-1 text-xs font-medium text-text-muted hover:text-neon-indigo bg-charcoal-medium rounded-md transition-colors"
+              className="px-2 py-1 text-xs font-medium text-text-muted hover:text-neon-indigo-glow bg-charcoal-medium rounded-md transition-colors"
             >
               Enter ↵
             </button>

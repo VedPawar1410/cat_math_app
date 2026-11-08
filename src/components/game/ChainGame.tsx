@@ -214,7 +214,7 @@ export function ChainGame() {
           {/* How it works */}
           <div className="p-3 bg-neon-indigo/10 rounded-xl border border-neon-indigo/20">
             <p className="text-sm text-text-secondary leading-relaxed">
-              <span className="text-neon-indigo font-medium">How it works:</span>{" "}
+              <span className="text-neon-indigo-glow font-medium">How it works:</span>{" "}
               Each answer becomes the starting number for the next addition.
               Complete the chain to score!
             </p>
@@ -231,6 +231,7 @@ export function ChainGame() {
             <div className="flex items-center gap-3 bg-charcoal-light rounded-xl p-3">
               <button
                 onClick={() => adjustDifficulty(-1)}
+                aria-label="Lower difficulty"
                 disabled={difficulty === 1}
                 className="p-2 rounded-lg bg-charcoal-medium text-text-secondary hover:text-text-primary disabled:opacity-30 transition-all"
               >
@@ -248,6 +249,7 @@ export function ChainGame() {
 
               <button
                 onClick={() => adjustDifficulty(1)}
+                aria-label="Raise difficulty"
                 disabled={difficulty === 5}
                 className="p-2 rounded-lg bg-charcoal-medium text-text-secondary hover:text-text-primary disabled:opacity-30 transition-all"
               >
@@ -259,7 +261,7 @@ export function ChainGame() {
           {/* Chain info */}
           <div className="p-3 bg-charcoal-light/50 rounded-xl border border-soft-slate/20">
             <div className="flex items-center gap-2 text-sm text-text-secondary">
-              <Link2 className="w-4 h-4 text-neon-indigo" />
+              <Link2 className="w-4 h-4 text-neon-indigo-glow" />
               <span>Chain length: 10-20 steps</span>
             </div>
           </div>
@@ -284,7 +286,7 @@ export function ChainGame() {
                 <div className="text-xs text-text-muted">Completed</div>
               </div>
               <div className="text-center">
-                <div className="text-lg font-bold text-neon-indigo">
+                <div className="text-lg font-bold text-neon-indigo-glow">
                   {bestScore}
                 </div>
                 <div className="text-xs text-text-muted">Best Score</div>
@@ -322,7 +324,7 @@ export function ChainGame() {
             </div>
 
             {/* Progress */}
-            <div className="flex items-center gap-1.5 text-neon-indigo">
+            <div className="flex items-center gap-1.5 text-neon-indigo-glow">
               <Link2 className="w-4 h-4" />
               <span className="font-mono text-sm font-bold">
                 {progress.current}/{progress.total}
@@ -364,7 +366,7 @@ export function ChainGame() {
         >
           <div className="text-3xl sm:text-4xl font-bold font-mono text-text-primary tracking-tight">
             {currentStep.previousResult.toLocaleString()}
-            <span className="mx-3 text-neon-indigo">+</span>
+            <span className="mx-3 text-neon-indigo-glow">+</span>
             {currentStep.addend.toLocaleString()}
           </div>
         </motion.div>
@@ -386,7 +388,7 @@ export function ChainGame() {
               `}
             >
               {inputValue || (
-                <span className="text-text-muted/50">= ?</span>
+                <span className="text-text-muted">= ?</span>
               )}
             </div>
 
@@ -454,7 +456,7 @@ export function ChainGame() {
             transition={{ type: "spring", stiffness: 200 }}
             className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-neon-indigo/20 mb-4"
           >
-            <Trophy className="w-8 h-8 text-neon-indigo" />
+            <Trophy className="w-8 h-8 text-neon-indigo-glow" />
           </motion.div>
           <h2 className="text-2xl font-bold text-text-primary">
             Chain Complete!
@@ -498,10 +500,10 @@ export function ChainGame() {
               </div>
               <div className="p-3 bg-charcoal-light rounded-xl text-center">
                 <div className="flex items-center justify-center gap-1.5 mb-1">
-                  <Clock className="w-4 h-4 text-neon-indigo" />
+                  <Clock className="w-4 h-4 text-neon-indigo-glow" />
                   <span className="text-xs text-text-muted">Avg Time</span>
                 </div>
-                <div className="text-xl font-bold text-neon-indigo">
+                <div className="text-xl font-bold text-neon-indigo-glow">
                   {stats.averageTimePerStep}s
                 </div>
               </div>

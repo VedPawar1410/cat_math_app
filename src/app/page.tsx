@@ -62,7 +62,7 @@ export default function Home() {
           transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
           className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-neon-indigo/20 mb-3 neon-glow"
         >
-          <Zap className="w-7 h-7 text-neon-indigo" />
+          <Zap className="w-7 h-7 text-neon-indigo-glow" />
         </motion.div>
         <h1 className="text-2xl sm:text-3xl font-bold text-text-primary tracking-tight mb-1">
           CAT-Fast
@@ -83,6 +83,8 @@ export default function Home() {
           <button
             key={mode.id}
             onClick={() => setActiveMode(mode.id)}
+            aria-label={mode.label}
+            aria-pressed={activeMode === mode.id}
             className={`
               relative flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium
               transition-all duration-200

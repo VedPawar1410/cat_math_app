@@ -243,7 +243,7 @@ export function DivisibilityGame() {
           {/* Description */}
           <div className="p-3 bg-neon-indigo/10 rounded-xl border border-neon-indigo/20">
             <p className="text-sm text-text-secondary leading-relaxed">
-              <span className="text-neon-indigo font-medium">Practice:</span>{" "}
+              <span className="text-neon-indigo-glow font-medium">Practice:</span>{" "}
               Determine if numbers are divisible and calculate remainders.
             </p>
             <div className="mt-2 text-xs text-text-muted font-mono">
@@ -257,6 +257,7 @@ export function DivisibilityGame() {
             <div className="flex items-center gap-3 bg-charcoal-light rounded-xl p-3">
               <button
                 onClick={() => adjustDifficulty(-1)}
+                aria-label="Lower difficulty"
                 disabled={difficulty === 1}
                 className="p-2 rounded-lg bg-charcoal-medium text-text-secondary hover:text-text-primary disabled:opacity-30 transition-all"
               >
@@ -272,6 +273,7 @@ export function DivisibilityGame() {
 
               <button
                 onClick={() => adjustDifficulty(1)}
+                aria-label="Raise difficulty"
                 disabled={difficulty === 5}
                 className="p-2 rounded-lg bg-charcoal-medium text-text-secondary hover:text-text-primary disabled:opacity-30 transition-all"
               >
@@ -310,6 +312,9 @@ export function DivisibilityGame() {
             </div>
             <button
               onClick={() => setAcceptNegativeRemainders(!acceptNegativeRemainders)}
+              role="switch"
+              aria-checked={acceptNegativeRemainders}
+              aria-label="Accept negative remainders"
               className={`
                 w-12 h-6 rounded-full transition-all duration-200
                 ${acceptNegativeRemainders ? "bg-neon-indigo" : "bg-charcoal-medium"}
@@ -336,7 +341,7 @@ export function DivisibilityGame() {
                 <div className="text-xs text-text-muted">Games</div>
               </div>
               <div className="text-center">
-                <div className="text-lg font-bold text-neon-indigo">{bestAccuracy}%</div>
+                <div className="text-lg font-bold text-neon-indigo-glow">{bestAccuracy}%</div>
                 <div className="text-xs text-text-muted">Best</div>
               </div>
             </motion.div>
@@ -366,7 +371,7 @@ export function DivisibilityGame() {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3 text-text-secondary text-sm">
             <span className="font-mono">{formatTime(elapsedTime)}</span>
-            <span className="text-neon-indigo font-medium">
+            <span className="text-neon-indigo-glow font-medium">
               {progress.current}/{progress.total}
             </span>
           </div>
@@ -394,7 +399,7 @@ export function DivisibilityGame() {
             className="text-4xl sm:text-5xl font-bold font-mono text-text-primary"
           >
             {currentProblem.dividend}
-            <span className="mx-3 text-neon-indigo">÷</span>
+            <span className="mx-3 text-neon-indigo-glow">÷</span>
             {currentProblem.divisor}
           </motion.div>
         </div>
@@ -404,7 +409,7 @@ export function DivisibilityGame() {
           <div className="mb-4">
             <button
               onClick={() => setShowHint(!showHint)}
-              className="flex items-center gap-2 text-sm text-text-muted hover:text-neon-indigo transition-colors mx-auto"
+              className="flex items-center gap-2 text-sm text-text-muted hover:text-neon-indigo-glow transition-colors mx-auto"
             >
               <HelpCircle className="w-4 h-4" />
               {showHint ? "Hide hint" : "Show hint"}
@@ -468,7 +473,7 @@ export function DivisibilityGame() {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3 text-text-secondary text-sm">
             <span className="font-mono">{formatTime(elapsedTime)}</span>
-            <span className="text-neon-indigo font-medium">
+            <span className="text-neon-indigo-glow font-medium">
               {progress.current}/{progress.total}
             </span>
           </div>
@@ -506,7 +511,7 @@ export function DivisibilityGame() {
           </div>
           <div className="text-3xl font-bold font-mono text-text-primary">
             {currentProblem.dividend}
-            <span className="mx-2 text-neon-indigo">÷</span>
+            <span className="mx-2 text-neon-indigo-glow">÷</span>
             {currentProblem.divisor}
             <span className="mx-2 text-text-muted">=</span>
             <span className="text-text-muted">?</span>
@@ -530,7 +535,7 @@ export function DivisibilityGame() {
               ${remainderResult === "pending" ? "border-soft-slate/30" : ""}
             `}
           >
-            {remainderInput || <span className="text-text-muted/50">Remainder</span>}
+            {remainderInput || <span className="text-text-muted">Remainder</span>}
           </div>
           {acceptNegativeRemainders && remainderResult === "pending" && (
             <p className="text-xs text-text-muted text-center mt-2">
@@ -569,7 +574,7 @@ export function DivisibilityGame() {
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <span className="text-sm text-text-secondary font-mono">{formatTime(elapsedTime)}</span>
-          <span className="text-sm text-neon-indigo font-medium">
+          <span className="text-sm text-neon-indigo-glow font-medium">
             {progress.current}/{progress.total}
           </span>
         </div>
@@ -673,7 +678,7 @@ export function DivisibilityGame() {
             transition={{ type: "spring", stiffness: 200 }}
             className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-neon-indigo/20 mb-4"
           >
-            <Trophy className="w-8 h-8 text-neon-indigo" />
+            <Trophy className="w-8 h-8 text-neon-indigo-glow" />
           </motion.div>
           <h2 className="text-2xl font-bold text-text-primary">Session Complete!</h2>
           <p className="text-sm text-text-muted mt-1">
@@ -709,7 +714,7 @@ export function DivisibilityGame() {
             </div>
             <div className="p-3 bg-charcoal-light rounded-xl text-center">
               <div className="text-xs text-text-muted mb-1">Remainders</div>
-              <div className="text-xl font-bold text-neon-indigo">
+              <div className="text-xl font-bold text-neon-indigo-glow">
                 {correctRemCount}/{results.length}
               </div>
             </div>

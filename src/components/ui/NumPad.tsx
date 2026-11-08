@@ -126,6 +126,7 @@ export function NumPad({
           <motion.button
             whileTap={buttonVariants.tap}
             onClick={handleDecimal}
+            aria-label="Decimal point"
             disabled={disabled}
             className={`${actionButton} h-12 sm:h-14`}
           >
@@ -135,6 +136,7 @@ export function NumPad({
           <motion.button
             whileTap={buttonVariants.tap}
             onClick={() => handleDigit("-")}
+            aria-label="Negative sign"
             disabled={disabled}
             className={`${actionButton} h-12 sm:h-14`}
           >
@@ -156,6 +158,7 @@ export function NumPad({
         <motion.button
           whileTap={buttonVariants.tap}
           onClick={handleDelete}
+          aria-label="Delete last digit"
           disabled={disabled}
           className={`${actionButton} h-12 sm:h-14`}
         >

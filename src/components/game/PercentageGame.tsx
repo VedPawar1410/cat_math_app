@@ -169,7 +169,7 @@ export function PercentageGame() {
             <div className="p-3 rounded-xl bg-charcoal-light/50 border border-soft-slate/20">
               <p className="text-sm text-text-secondary">
                 Calculate the percentage value of the given ratio. 
-                Answer to <span className="text-neon-indigo font-medium">
+                Answer to <span className="text-neon-indigo-glow font-medium">
                   {difficulty <= 2 ? "1" : "2"} decimal place{difficulty <= 2 ? "" : "s"}
                 </span>.
               </p>
@@ -184,6 +184,7 @@ export function PercentageGame() {
               <div className="flex items-center gap-3 bg-charcoal-light rounded-xl p-3">
                 <button
                   onClick={() => adjustDifficulty(-1)}
+                  aria-label="Lower difficulty"
                   disabled={difficulty === 1}
                   className="p-2 rounded-lg bg-charcoal-medium text-text-secondary hover:text-text-primary disabled:opacity-30 transition-all"
                 >
@@ -201,6 +202,7 @@ export function PercentageGame() {
 
                 <button
                   onClick={() => adjustDifficulty(1)}
+                  aria-label="Raise difficulty"
                   disabled={difficulty === 5}
                   className="p-2 rounded-lg bg-charcoal-medium text-text-secondary hover:text-text-primary disabled:opacity-30 transition-all"
                 >
@@ -231,7 +233,7 @@ export function PercentageGame() {
                 <Clock className="w-4 h-4" />
                 <span className="font-mono text-sm">{formatTime(elapsedTime)}</span>
               </div>
-              <div className="flex items-center gap-1.5 text-neon-indigo">
+              <div className="flex items-center gap-1.5 text-neon-indigo-glow">
                 <Flame className="w-4 h-4" />
                 <span className="font-mono text-sm font-bold">{currentStreak}</span>
               </div>
@@ -288,7 +290,7 @@ export function PercentageGame() {
                   className="flex items-center justify-center gap-2 mt-3 text-xl text-text-muted"
                 >
                   <span>=</span>
-                  <span className="text-neon-indigo">?</span>
+                  <span className="text-neon-indigo-glow">?</span>
                   <span>%</span>
                 </motion.div>
 
@@ -324,7 +326,7 @@ export function PercentageGame() {
                     ${inputStyles[feedbackState]}
                   `}
                 >
-                  {inputValue || <span className="text-text-muted/50">0.00</span>}
+                  {inputValue || <span className="text-text-muted">0.00</span>}
                 </div>
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xl text-text-muted font-bold">
                   %

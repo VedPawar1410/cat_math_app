@@ -7,12 +7,12 @@
   --charcoal-medium: #242424;
   --soft-slate: #3d3d4a;
   --slate-muted: #5a5a6e;
-  --neon-indigo: #6366f1;
+  --neon-indigo: #5f62f0;
   --neon-indigo-glow: #818cf8;
   --neon-indigo-dim: #4f46e5;
   --text-primary: #f5f5f7;
   --text-secondary: #a1a1aa;
-  --text-muted: #71717a;
+  --text-muted: #8f8f9a;
   --success-glow: #22c55e;
   --error-flash: #ef4444;
   
@@ -210,6 +210,12 @@ body {
     overflow: auto;
     -webkit-overflow-scrolling: touch;
   }
+}
+
+/* Stops rapid numpad taps triggering double-tap zoom; pinch-zoom still works */
+button,
+[role="button"] {
+  touch-action: manipulation;
 }
 
 /* Touch interaction optimizations for mobile */

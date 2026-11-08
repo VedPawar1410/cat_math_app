@@ -47,7 +47,7 @@ export function GameCardHeader({ title, subtitle, icon }: GameCardHeaderProps) {
           initial={{ rotate: -10, scale: 0 }}
           animate={{ rotate: 0, scale: 1 }}
           transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-          className="flex items-center justify-center w-10 h-10 rounded-xl bg-neon-indigo/20 text-neon-indigo"
+          className="flex items-center justify-center w-10 h-10 rounded-xl bg-neon-indigo/20 text-neon-indigo-glow"
         >
           {icon}
         </motion.div>

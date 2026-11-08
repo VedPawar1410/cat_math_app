@@ -191,6 +191,7 @@ export function MathGame() {
               <div className="flex items-center gap-3 bg-charcoal-light rounded-xl p-3">
                 <button
                   onClick={() => adjustDifficulty(-1)}
+                  aria-label="Lower difficulty"
                   disabled={difficulty === 1}
                   className="p-2 rounded-lg bg-charcoal-medium text-text-secondary hover:text-text-primary disabled:opacity-30 transition-all"
                 >
@@ -208,6 +209,7 @@ export function MathGame() {
 
                 <button
                   onClick={() => adjustDifficulty(1)}
+                  aria-label="Raise difficulty"
                   disabled={difficulty === 5}
                   className="p-2 rounded-lg bg-charcoal-medium text-text-secondary hover:text-text-primary disabled:opacity-30 transition-all"
                 >
@@ -234,7 +236,7 @@ export function MathGame() {
                   <div className="text-xs text-text-muted">Accuracy</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-lg font-bold text-neon-indigo">{stats.bestStreak}</div>
+                  <div className="text-lg font-bold text-neon-indigo-glow">{stats.bestStreak}</div>
                   <div className="text-xs text-text-muted">Best Streak</div>
                 </div>
               </motion.div>
@@ -265,7 +267,7 @@ export function MathGame() {
               </div>
               
               {/* Streak */}
-              <div className="flex items-center gap-1.5 text-neon-indigo">
+              <div className="flex items-center gap-1.5 text-neon-indigo-glow">
                 <Flame className="w-4 h-4" />
                 <span className="font-mono text-sm font-bold">{stats.currentStreak}</span>
               </div>
@@ -298,7 +300,7 @@ export function MathGame() {
                   ${inputStyles[feedbackState]}
                 `}
               >
-                {inputValue || <span className="text-text-muted/50">Your answer</span>}
+                {inputValue || <span className="text-text-muted">Your answer</span>}
               </div>
 
               {/* Feedback message */}

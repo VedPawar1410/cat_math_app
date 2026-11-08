@@ -134,7 +134,7 @@ export function RatioGame() {
             {/* Instructions */}
             <div className="p-3 rounded-xl bg-charcoal-light/50 border border-soft-slate/20">
               <p className="text-sm text-text-secondary">
-                Compare two ratios and click the <span className="text-neon-indigo font-medium">larger one</span>. 
+                Compare two ratios and click the <span className="text-neon-indigo-glow font-medium">larger one</span>. 
                 Use percentage estimation to compare.
               </p>
               <p className="text-xs text-text-muted mt-2">
@@ -148,6 +148,7 @@ export function RatioGame() {
               <div className="flex items-center gap-3 bg-charcoal-light rounded-xl p-3">
                 <button
                   onClick={() => adjustDifficulty(-1)}
+                  aria-label="Lower difficulty"
                   disabled={difficulty === 1}
                   className="p-2 rounded-lg bg-charcoal-medium text-text-secondary hover:text-text-primary disabled:opacity-30 transition-all"
                 >
@@ -165,6 +166,7 @@ export function RatioGame() {
 
                 <button
                   onClick={() => adjustDifficulty(1)}
+                  aria-label="Raise difficulty"
                   disabled={difficulty === 5}
                   className="p-2 rounded-lg bg-charcoal-medium text-text-secondary hover:text-text-primary disabled:opacity-30 transition-all"
                 >
@@ -195,7 +197,7 @@ export function RatioGame() {
                 <Clock className="w-4 h-4" />
                 <span className="font-mono text-sm">{formatTime(elapsedTime)}</span>
               </div>
-              <div className="flex items-center gap-1.5 text-neon-indigo">
+              <div className="flex items-center gap-1.5 text-neon-indigo-glow">
                 <Flame className="w-4 h-4" />
                 <span className="font-mono text-sm font-bold">{currentStreak}</span>
               </div>
