@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Outfit, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -24,20 +25,6 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "CAT-Fast",
-    startupImage: [
-      {
-        url: "/icons/apple-splash-2048-2732.png",
-        media: "(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)",
-      },
-      {
-        url: "/icons/apple-splash-1170-2532.png",
-        media: "(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)",
-      },
-      {
-        url: "/icons/apple-splash-1284-2778.png",
-        media: "(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)",
-      },
-    ],
   },
   formatDetection: {
     telephone: false,
@@ -80,6 +67,7 @@ export default function RootLayout({
       <body
         className={`${outfit.variable} ${jetbrains.variable} antialiased after-hours-bg safe-area-padding`}
       >
+        <ServiceWorkerRegister />
         {children}
       </body>
     </html>
