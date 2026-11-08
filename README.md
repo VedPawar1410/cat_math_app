@@ -264,6 +264,7 @@ I built this in layers while preparing for CAT, then came back to it ten months 
 
 ## Future improvements
 
+- Finish checking on a real iPhone: the new play-screen layout, stats after reopening the app, and VoiceOver announcements.
 - Improve first-visit load. I suspect the entrance animations hide content until JavaScript runs, but haven't confirmed it.
 - Replace `next-pwa` with a maintained option such as Serwist.
 - Add adaptive difficulty and spaced repetition for weak areas.
