@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { motion } from "framer-motion";
 import { Zap, Calculator, Percent, Scale, Link2, Divide } from "lucide-react";
 import { MathGame } from "@/components/game/MathGame";
@@ -44,8 +44,22 @@ const gameModes: { id: GameMode; label: string; icon: React.ReactNode; descripti
   },
 ];
 
+function subscribeToHash(onChange: () => void) {
+  window.addEventListener("hashchange", onChange);
+  return () => window.removeEventListener("hashchange", onChange);
+}
+
+// App-icon shortcuts link to /#mode=ratio. It's a hash rather than ?mode= because
+// the service worker's cached home page only matches the exact URL "/".
+function getLinkedMode(): GameMode | null {
+  const mode = window.location.hash.replace("#mode=", "");
+  return gameModes.find((m) => m.id === mode)?.id ?? null;
+}
+
 export default function Home() {
-  const [activeMode, setActiveMode] = useState<GameMode>("math");
+  const linkedMode = useSyncExternalStore(subscribeToHash, getLinkedMode, () => null);
+  const [pickedMode, setPickedMode] = useState<GameMode | null>(null);
+  const activeMode = pickedMode ?? linkedMode ?? "math";
 
   return (
     <main className="min-h-dvh flex flex-col items-center justify-center px-4 py-8 sm:py-12">
@@ -82,7 +96,7 @@ export default function Home() {
         {gameModes.map((mode) => (
           <button
             key={mode.id}
-            onClick={() => setActiveMode(mode.id)}
+            onClick={() => setPickedMode(mode.id)}
             aria-label={mode.label}
             aria-pressed={activeMode === mode.id}
             className={`

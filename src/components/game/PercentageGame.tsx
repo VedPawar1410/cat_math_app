@@ -14,12 +14,20 @@ import {
   getPercentageDifficultyDescription,
 } from "@/lib/engines/percentageEngine";
 import { useCancellableTimeout } from "@/hooks/useCancellableTimeout";
+import { useSessionRecorder, SessionResult } from "@/hooks/useSessionRecorder";
+import { usePracticeStore } from "@/lib/practiceStore";
+import { SessionSummary } from "./SessionSummary";
+import { StatsPreview } from "@/components/ui/StatsPreview";
+import { ScreenReaderStatus } from "@/components/ui/ScreenReaderStatus";
 
 type FeedbackState = "neutral" | "correct" | "incorrect";
 
 export function PercentageGame() {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [difficulty, setDifficulty] = useState<PercentageDifficulty>(1);
+  const record = usePracticeStore((s) => s.records.percentage);
+  const setSavedDifficulty = usePracticeStore((s) => s.setDifficulty);
+  const saveAnswer = usePracticeStore((s) => s.recordAnswer);
+  const difficulty = record.difficulty;
   const [problem, setProblem] = useState<PercentageProblem | null>(null);
   const [feedbackState, setFeedbackState] = useState<FeedbackState>("neutral");
   const [inputValue, setInputValue] = useState("");
@@ -29,6 +37,8 @@ export function PercentageGame() {
   const [startTime, setStartTime] = useState<number | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
   const { schedule: scheduleNextProblem, cancel: cancelNextProblem } = useCancellableTimeout();
+  const { startSession, markQuestionShown, recordAnswer, finishSession } = useSessionRecorder();
+  const [summary, setSummary] = useState<SessionResult | null>(null);
 
   // Timer effect
   useEffect(() => {
@@ -44,11 +54,14 @@ export function PercentageGame() {
   const generateNewProblem = useCallback(() => {
     const newProblem = generatePercentageProblem(difficulty);
     setProblem(newProblem);
+    markQuestionShown();
     setFeedbackState("neutral");
     setInputValue("");
-  }, [difficulty]);
+  }, [difficulty, markQuestionShown]);
 
   const startGame = useCallback(() => {
+    startSession();
+    setSummary(null);
     setIsPlaying(true);
     setQuestionCount(0);
     setSessionCorrect(0);
@@ -56,7 +69,7 @@ export function PercentageGame() {
     setStartTime(Date.now());
     setElapsedTime(0);
     generateNewProblem();
-  }, [generateNewProblem]);
+  }, [generateNewProblem, startSession]);
 
   const resetGame = useCallback(() => {
     cancelNextProblem();
@@ -71,6 +84,11 @@ export function PercentageGame() {
     setElapsedTime(0);
   }, [cancelNextProblem]);
 
+  const endSession = useCallback(() => {
+    setSummary(finishSession());
+    resetGame();
+  }, [finishSession, resetGame]);
+
   const handleSubmitAnswer = useCallback(() => {
     if (!problem || !inputValue.trim()) return;
 
@@ -78,6 +96,8 @@ export function PercentageGame() {
     if (isNaN(userAnswer)) return;
 
     const isCorrect = isPercentageCorrect(userAnswer, problem.answer, problem.decimalPlaces);
+    recordAnswer(isCorrect);
+    saveAnswer("percentage", isCorrect, isCorrect ? currentStreak + 1 : 0);
     setFeedbackState(isCorrect ? "correct" : "incorrect");
     setQuestionCount((c) => c + 1);
 
@@ -90,7 +110,7 @@ export function PercentageGame() {
 
     // Move to next question after delay
     scheduleNextProblem(generateNewProblem, isCorrect ? 1000 : 1500);
-  }, [problem, inputValue, generateNewProblem, scheduleNextProblem]);
+  }, [problem, inputValue, currentStreak, generateNewProblem, scheduleNextProblem, recordAnswer, saveAnswer]);
 
   const handleDigit = useCallback((digit: string) => {
     if (feedbackState !== "neutral") return;
@@ -112,7 +132,7 @@ export function PercentageGame() {
 
   const adjustDifficulty = (delta: number) => {
     const newDiff = Math.max(1, Math.min(5, difficulty + delta)) as PercentageDifficulty;
-    setDifficulty(newDiff);
+    setSavedDifficulty("percentage", newDiff);
   };
 
   const formatTime = (seconds: number) => {
@@ -124,12 +144,16 @@ export function PercentageGame() {
   // Keyboard support
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (summary) {
+        if (e.key === "Enter" || e.key === "Escape") setSummary(null);
+        return;
+      }
       if (!isPlaying) {
         if (e.key === "Enter") startGame();
         return;
       }
       if (e.key === "Escape") {
-        resetGame();
+        endSession();
         return;
       }
       if (feedbackState !== "neutral") return;
@@ -146,7 +170,19 @@ export function PercentageGame() {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isPlaying, feedbackState, inputValue, startGame, resetGame, handleDigit, handleDecimal, handleDelete, handleSubmitAnswer]);
+  }, [summary, isPlaying, feedbackState, inputValue, startGame, endSession, handleDigit, handleDecimal, handleDelete, handleSubmitAnswer]);
+
+  let announcement = "";
+  if (summary) {
+    announcement = `Session finished. ${summary.correct} of ${summary.answered} correct.`;
+  } else if (problem) {
+    announcement =
+      feedbackState === "correct"
+        ? "Correct."
+        : feedbackState === "incorrect"
+          ? `Incorrect. The answer is ${problem.answer} percent.`
+          : `${problem.numerator} over ${problem.denominator}, as a percentage.`;
+  }
 
   const inputStyles = {
     neutral: "border-soft-slate/30",
@@ -156,7 +192,10 @@ export function PercentageGame() {
 
   return (
     <GameCard>
-      {!isPlaying ? (
+      <ScreenReaderStatus message={announcement} />
+      {summary ? (
+        <SessionSummary result={summary} onBack={() => setSummary(null)} onPlayAgain={startGame} />
+      ) : !isPlaying ? (
         <>
           <GameCardHeader
             title="Percentage Rule"
@@ -210,6 +249,12 @@ export function PercentageGame() {
                 </button>
               </div>
             </div>
+
+            <StatsPreview
+              total={record.totalQuestions}
+              correct={record.correctAnswers}
+              bestStreak={record.bestStreak}
+            />
           </GameCardContent>
 
           <GameCardFooter>
@@ -368,7 +413,7 @@ export function PercentageGame() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={resetGame}
+              onClick={endSession}
               icon={<RotateCcw className="w-4 h-4" />}
             >
               End Session

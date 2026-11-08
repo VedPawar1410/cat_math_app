@@ -1,7 +1,7 @@
 {
   "name": "CAT-Fast | Mental Math Trainer",
   "short_name": "CAT-Fast",
-  "description": "Sharpen your mental math skills for CAT and beyond. Practice addition, subtraction, percentages, and ratio comparisons.",
+  "description": "Sharpen your mental math skills for CAT and beyond. Practice addition, subtraction, percentages, ratio comparisons, addition chains, and remainders.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
@@ -40,21 +40,35 @@
       "name": "Start Math Practice",
       "short_name": "Math",
       "description": "Start addition and subtraction practice",
-      "url": "/?mode=math",
+      "url": "/#mode=math",
       "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
     },
     {
       "name": "Percentage Practice",
       "short_name": "Percent",
       "description": "Practice percentage calculations",
-      "url": "/?mode=percentage",
+      "url": "/#mode=percentage",
       "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
     },
     {
       "name": "Ratio Comparisons",
       "short_name": "Ratios",
       "description": "Practice ratio comparisons",
-      "url": "/?mode=ratio",
+      "url": "/#mode=ratio",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Addition Chain",
+      "short_name": "Chain",
+      "description": "Practice continuous addition chains",
+      "url": "/#mode=chain",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Divisibility Practice",
+      "short_name": "Divide",
+      "description": "Practice divisibility and remainders",
+      "url": "/#mode=divisibility",
       "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
     }
   ]

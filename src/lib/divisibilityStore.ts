@@ -199,7 +199,13 @@ export const useDivisibilityStore = create<DivisibilityGameState>()(
           totalCorrectRemainder,
           bestAccuracy,
         } = get();
-        
+
+        // Nothing answered: go back to setup rather than record an empty game
+        if (results.length === 0) {
+          get().resetGame();
+          return;
+        }
+
         const correctDiv = results.filter((r) => r.divisibilityCorrect).length;
         const correctRem = results.filter((r) => r.remainderCorrect).length;
         const totalAnswers = results.length * 2;

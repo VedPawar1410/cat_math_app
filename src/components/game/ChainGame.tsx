@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/Button";
 import { NumPad } from "@/components/ui/NumPad";
 import { useChainStore } from "@/lib/chainStore";
 import { useCancellableTimeout } from "@/hooks/useCancellableTimeout";
+import { ScreenReaderStatus } from "@/components/ui/ScreenReaderStatus";
 import { getChainDifficultyDescription, ChainDifficulty } from "@/lib/engines/chainEngine";
 
 // The store moves to the next step as soon as an answer is submitted, so
@@ -200,10 +201,27 @@ export function ChainGame() {
     }
   }, [phase, endGame]);
 
+  // Built from the results rather than the short-lived feedback, so a step is
+  // announced once instead of again when the feedback message disappears.
+  let announcement = "";
+  if (phase === "playing" && currentStep) {
+    const last = stepResults[stepResults.length - 1];
+    let verdict = "";
+    if (last) {
+      if (last.isCorrect) verdict = "Correct. ";
+      else if (last.userAnswer === null) verdict = "Skipped. ";
+      else verdict = `Incorrect. The answer was ${last.step.result}. `;
+    }
+    announcement = `${verdict}${currentStep.previousResult} plus ${currentStep.addend}`;
+  } else if (phase === "complete" && sessionStats) {
+    announcement = `Chain ended. ${sessionStats.correctSteps} of ${sessionStats.totalSteps} correct.`;
+  }
+
   // SETUP PHASE
   if (phase === "setup") {
     return (
       <GameCard>
+        <ScreenReaderStatus message={announcement} />
         <GameCardHeader
           title="Addition Chain"
           subtitle="Continuous chain of additions"
@@ -314,6 +332,7 @@ export function ChainGame() {
   if (phase === "playing" && currentStep) {
     return (
       <GameCard>
+        <ScreenReaderStatus message={announcement} />
         {/* Game header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-4">
@@ -449,6 +468,7 @@ export function ChainGame() {
 
     return (
       <GameCard>
+        <ScreenReaderStatus message={announcement} />
         <div className="text-center mb-6">
           <motion.div
             initial={{ scale: 0 }}
@@ -459,12 +479,12 @@ export function ChainGame() {
             <Trophy className="w-8 h-8 text-neon-indigo-glow" />
           </motion.div>
           <h2 className="text-2xl font-bold text-text-primary">
-            Chain Complete!
+            {stats?.completed ? "Chain Complete!" : "Chain Ended"}
           </h2>
           <p className="text-sm text-text-muted mt-1">
             {stats?.completed
               ? "You finished the entire chain!"
-              : "Good effort on the chain!"}
+              : `Stopped after ${stats?.totalSteps} of ${chain?.totalLength} steps`}
           </p>
         </div>
 

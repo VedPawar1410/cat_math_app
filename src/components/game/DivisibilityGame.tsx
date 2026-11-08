@@ -20,6 +20,7 @@ import { GameCard, GameCardHeader, GameCardContent, GameCardFooter } from "@/com
 import { Button } from "@/components/ui/Button";
 import { NumPad } from "@/components/ui/NumPad";
 import { useDivisibilityStore } from "@/lib/divisibilityStore";
+import { ScreenReaderStatus } from "@/components/ui/ScreenReaderStatus";
 import {
   getDivisibilityDifficultyDescription,
   getDivisibilityHint,
@@ -167,6 +168,11 @@ export function DivisibilityGame() {
         return;
       }
 
+      if (e.key === "Escape") {
+        endGame();
+        return;
+      }
+
       if (phase === "divisibility") {
         if (e.key === "y" || e.key === "Y" || e.key === "1") {
           handleDivisibilityAnswer(true);
@@ -211,6 +217,7 @@ export function DivisibilityGame() {
     handleRemainderSubmit,
     handleNextOrEnd,
     resetGame,
+    endGame,
   ]);
 
   // Hint for current divisor
@@ -229,10 +236,24 @@ export function DivisibilityGame() {
     [results]
   );
 
+  let announcement = "";
+  if (currentProblem && phase === "divisibility") {
+    announcement = `Is ${currentProblem.dividend} divisible by ${currentProblem.divisor}?`;
+  } else if (currentProblem && phase === "remainder") {
+    const verdict = divisibilityResult === "correct" ? "Correct." : "Incorrect.";
+    announcement = `${verdict} What is the remainder of ${currentProblem.dividend} divided by ${currentProblem.divisor}?`;
+  } else if (currentProblem && phase === "feedback") {
+    const verdict = results[results.length - 1]?.remainderCorrect ? "Correct." : "Incorrect.";
+    announcement = `${verdict} ${explainRemainder(currentProblem)}`;
+  } else if (phase === "summary") {
+    announcement = `Session finished. Accuracy ${sessionAccuracy} percent.`;
+  }
+
   // SETUP PHASE
   if (phase === "setup") {
     return (
       <GameCard>
+        <ScreenReaderStatus message={announcement} />
         <GameCardHeader
           title="Divisibility"
           subtitle="Remainders & factors"
@@ -367,6 +388,7 @@ export function DivisibilityGame() {
   if (phase === "divisibility" && currentProblem) {
     return (
       <GameCard>
+        <ScreenReaderStatus message={announcement} />
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3 text-text-secondary text-sm">
@@ -469,6 +491,7 @@ export function DivisibilityGame() {
 
     return (
       <GameCard>
+        <ScreenReaderStatus message={announcement} />
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3 text-text-secondary text-sm">
@@ -571,6 +594,7 @@ export function DivisibilityGame() {
 
     return (
       <GameCard>
+        <ScreenReaderStatus message={announcement} />
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <span className="text-sm text-text-secondary font-mono">{formatTime(elapsedTime)}</span>
@@ -671,6 +695,7 @@ export function DivisibilityGame() {
   if (phase === "summary") {
     return (
       <GameCard>
+        <ScreenReaderStatus message={announcement} />
         <div className="text-center mb-6">
           <motion.div
             initial={{ scale: 0 }}
@@ -680,7 +705,9 @@ export function DivisibilityGame() {
           >
             <Trophy className="w-8 h-8 text-neon-indigo-glow" />
           </motion.div>
-          <h2 className="text-2xl font-bold text-text-primary">Session Complete!</h2>
+          <h2 className="text-2xl font-bold text-text-primary">
+            {results.length >= maxProblems ? "Session Complete!" : "Session Ended"}
+          </h2>
           <p className="text-sm text-text-muted mt-1">
             {sessionAccuracy >= 80
               ? "Excellent work!"

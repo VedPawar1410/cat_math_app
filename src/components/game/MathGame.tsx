@@ -10,6 +10,10 @@ import { MathQuestion } from "./MathQuestion";
 import { generateProblem, MathProblem, Operation, Difficulty, getDifficultyDescription } from "@/lib/engines/mathEngine";
 import { useGameStore } from "@/lib/store";
 import { useCancellableTimeout } from "@/hooks/useCancellableTimeout";
+import { useSessionRecorder, SessionResult } from "@/hooks/useSessionRecorder";
+import { SessionSummary } from "./SessionSummary";
+import { StatsPreview } from "@/components/ui/StatsPreview";
+import { ScreenReaderStatus } from "@/components/ui/ScreenReaderStatus";
 
 type FeedbackState = "neutral" | "correct" | "incorrect";
 
@@ -26,6 +30,8 @@ export function MathGame() {
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const { schedule: scheduleNextProblem, cancel: cancelNextProblem } = useCancellableTimeout();
+  const { startSession, markQuestionShown, recordAnswer, finishSession } = useSessionRecorder();
+  const [summary, setSummary] = useState<SessionResult | null>(null);
 
   // Timer effect
   useEffect(() => {
@@ -43,18 +49,23 @@ export function MathGame() {
     setProblem(newProblem);
     // Starts this question's clock, so it has to run when the question appears
     useGameStore.getState().setQuestion(newProblem.question, newProblem.answer);
+    markQuestionShown();
     setFeedbackState("neutral");
     setInputValue("");
-  }, [operation, difficulty]);
+  }, [operation, difficulty, markQuestionShown]);
 
   const startGame = useCallback(() => {
+    startSession();
+    setSummary(null);
+    // The flame counter is per session, like the other modes; best streak is kept
+    useGameStore.setState((s) => ({ stats: { ...s.stats, currentStreak: 0 } }));
     setIsPlaying(true);
     setQuestionCount(0);
     setSessionCorrect(0);
     setStartTime(Date.now());
     setElapsedTime(0);
     generateNewProblem();
-  }, [generateNewProblem]);
+  }, [generateNewProblem, startSession]);
 
   const resetGame = useCallback(() => {
     cancelNextProblem();
@@ -68,6 +79,11 @@ export function MathGame() {
     setInputValue("");
   }, [cancelNextProblem]);
 
+  const endSession = useCallback(() => {
+    setSummary(finishSession());
+    resetGame();
+  }, [finishSession, resetGame]);
+
   const handleSubmitAnswer = useCallback(() => {
     if (!problem || !inputValue.trim()) return;
 
@@ -75,6 +91,7 @@ export function MathGame() {
     if (isNaN(answer)) return;
 
     const isCorrect = answer === problem.answer;
+    recordAnswer(isCorrect);
     setFeedbackState(isCorrect ? "correct" : "incorrect");
     setQuestionCount((c) => c + 1);
     
@@ -87,7 +104,7 @@ export function MathGame() {
 
     // Move to next question after brief delay
     scheduleNextProblem(generateNewProblem, isCorrect ? 800 : 1200);
-  }, [problem, inputValue, generateNewProblem, submitAnswer, scheduleNextProblem]);
+  }, [problem, inputValue, generateNewProblem, submitAnswer, scheduleNextProblem, recordAnswer]);
 
   const handleDigit = useCallback((digit: string) => {
     if (feedbackState !== "neutral") return;
@@ -122,12 +139,16 @@ export function MathGame() {
   // Keyboard support
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (summary) {
+        if (e.key === "Enter" || e.key === "Escape") setSummary(null);
+        return;
+      }
       if (!isPlaying) {
         if (e.key === "Enter") startGame();
         return;
       }
       if (e.key === "Escape") {
-        resetGame();
+        endSession();
         return;
       }
       if (feedbackState !== "neutral") return;
@@ -144,7 +165,19 @@ export function MathGame() {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isPlaying, feedbackState, inputValue, startGame, resetGame, handleDigit, handleDelete, handleSubmitAnswer]);
+  }, [summary, isPlaying, feedbackState, inputValue, startGame, endSession, handleDigit, handleDelete, handleSubmitAnswer]);
+
+  let announcement = "";
+  if (summary) {
+    announcement = `Session finished. ${summary.correct} of ${summary.answered} correct.`;
+  } else if (problem) {
+    announcement =
+      feedbackState === "correct"
+        ? "Correct."
+        : feedbackState === "incorrect"
+          ? `Incorrect. The answer is ${problem.answer}.`
+          : problem.question;
+  }
 
   const inputStyles = {
     neutral: "border-soft-slate/30",
@@ -154,7 +187,10 @@ export function MathGame() {
 
   return (
     <GameCard>
-      {!isPlaying ? (
+      <ScreenReaderStatus message={announcement} />
+      {summary ? (
+        <SessionSummary result={summary} onBack={() => setSummary(null)} onPlayAgain={startGame} />
+      ) : !isPlaying ? (
         <>
           <GameCardHeader
             title="Mental Math"
@@ -219,28 +255,11 @@ export function MathGame() {
             </div>
 
             {/* Stats preview */}
-            {stats.totalQuestions > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="grid grid-cols-3 gap-2 p-3 bg-charcoal-light/50 rounded-xl border border-soft-slate/20"
-              >
-                <div className="text-center">
-                  <div className="text-lg font-bold text-text-primary">{stats.totalQuestions}</div>
-                  <div className="text-xs text-text-muted">Total</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-lg font-bold text-success">
-                    {Math.round((stats.correctAnswers / stats.totalQuestions) * 100)}%
-                  </div>
-                  <div className="text-xs text-text-muted">Accuracy</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-lg font-bold text-neon-indigo-glow">{stats.bestStreak}</div>
-                  <div className="text-xs text-text-muted">Best Streak</div>
-                </div>
-              </motion.div>
-            )}
+            <StatsPreview
+              total={stats.totalQuestions}
+              correct={stats.correctAnswers}
+              bestStreak={stats.bestStreak}
+            />
           </GameCardContent>
 
           <GameCardFooter>
@@ -339,7 +358,7 @@ export function MathGame() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={resetGame}
+              onClick={endSession}
               icon={<RotateCcw className="w-4 h-4" />}
             >
               End Session

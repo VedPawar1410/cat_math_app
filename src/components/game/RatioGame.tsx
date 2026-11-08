@@ -12,12 +12,20 @@ import {
   getRatioDifficultyDescription,
 } from "@/lib/engines/ratioEngine";
 import { useCancellableTimeout } from "@/hooks/useCancellableTimeout";
+import { useSessionRecorder, SessionResult } from "@/hooks/useSessionRecorder";
+import { usePracticeStore } from "@/lib/practiceStore";
+import { SessionSummary } from "./SessionSummary";
+import { StatsPreview } from "@/components/ui/StatsPreview";
+import { ScreenReaderStatus } from "@/components/ui/ScreenReaderStatus";
 
 type FeedbackState = "neutral" | "correct" | "incorrect";
 
 export function RatioGame() {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [difficulty, setDifficulty] = useState<RatioDifficulty>(1);
+  const record = usePracticeStore((s) => s.records.ratio);
+  const setSavedDifficulty = usePracticeStore((s) => s.setDifficulty);
+  const saveAnswer = usePracticeStore((s) => s.recordAnswer);
+  const difficulty = record.difficulty;
   const [problem, setProblem] = useState<RatioComparisonProblem | null>(null);
   const [feedbackState, setFeedbackState] = useState<FeedbackState>("neutral");
   const [selectedAnswer, setSelectedAnswer] = useState<"A" | "B" | null>(null);
@@ -27,6 +35,8 @@ export function RatioGame() {
   const [startTime, setStartTime] = useState<number | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
   const { schedule: scheduleNextProblem, cancel: cancelNextProblem } = useCancellableTimeout();
+  const { startSession, markQuestionShown, recordAnswer, finishSession } = useSessionRecorder();
+  const [summary, setSummary] = useState<SessionResult | null>(null);
 
   // Timer effect
   useEffect(() => {
@@ -42,11 +52,14 @@ export function RatioGame() {
   const generateNewProblem = useCallback(() => {
     const newProblem = generateRatioComparison(difficulty);
     setProblem(newProblem);
+    markQuestionShown();
     setFeedbackState("neutral");
     setSelectedAnswer(null);
-  }, [difficulty]);
+  }, [difficulty, markQuestionShown]);
 
   const startGame = useCallback(() => {
+    startSession();
+    setSummary(null);
     setIsPlaying(true);
     setQuestionCount(0);
     setSessionCorrect(0);
@@ -54,7 +67,7 @@ export function RatioGame() {
     setStartTime(Date.now());
     setElapsedTime(0);
     generateNewProblem();
-  }, [generateNewProblem]);
+  }, [generateNewProblem, startSession]);
 
   const resetGame = useCallback(() => {
     cancelNextProblem();
@@ -69,11 +82,18 @@ export function RatioGame() {
     setElapsedTime(0);
   }, [cancelNextProblem]);
 
+  const endSession = useCallback(() => {
+    setSummary(finishSession());
+    resetGame();
+  }, [finishSession, resetGame]);
+
   const handleAnswer = useCallback((answer: "A" | "B") => {
     if (!problem || feedbackState !== "neutral") return;
 
     setSelectedAnswer(answer);
     const isCorrect = answer === problem.correctAnswer;
+    recordAnswer(isCorrect);
+    saveAnswer("ratio", isCorrect, isCorrect ? currentStreak + 1 : 0);
     setFeedbackState(isCorrect ? "correct" : "incorrect");
     setQuestionCount((c) => c + 1);
 
@@ -86,11 +106,11 @@ export function RatioGame() {
 
     // Auto-advance to next question
     scheduleNextProblem(generateNewProblem, isCorrect ? 800 : 1200);
-  }, [problem, feedbackState, generateNewProblem, scheduleNextProblem]);
+  }, [problem, feedbackState, currentStreak, generateNewProblem, scheduleNextProblem, recordAnswer, saveAnswer]);
 
   const adjustDifficulty = (delta: number) => {
     const newDiff = Math.max(1, Math.min(5, difficulty + delta)) as RatioDifficulty;
-    setDifficulty(newDiff);
+    setSavedDifficulty("ratio", newDiff);
   };
 
   const formatTime = (seconds: number) => {
@@ -102,27 +122,49 @@ export function RatioGame() {
   // Keyboard shortcuts for ratio selection
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (summary) {
+        if (e.key === "Enter" || e.key === "Escape") setSummary(null);
+        return;
+      }
       if (!isPlaying) {
         if (e.key === "Enter") startGame();
         return;
       }
+      if (e.key === "Escape") {
+        endSession();
+        return;
+      }
       if (feedbackState !== "neutral") return;
-      
+
       if (e.key === "1" || e.key === "ArrowLeft" || e.key === "a" || e.key === "A") {
         handleAnswer("A");
       } else if (e.key === "2" || e.key === "ArrowRight" || e.key === "b" || e.key === "B") {
         handleAnswer("B");
-      } else if (e.key === "Escape") {
-        resetGame();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isPlaying, feedbackState, startGame, handleAnswer, resetGame]);
+  }, [summary, isPlaying, feedbackState, startGame, handleAnswer, endSession]);
+
+  let announcement = "";
+  if (summary) {
+    announcement = `Session finished. ${summary.correct} of ${summary.answered} correct.`;
+  } else if (problem) {
+    const larger = problem.correctAnswer === "A" ? problem.ratioA : problem.ratioB;
+    announcement =
+      feedbackState === "correct"
+        ? "Correct."
+        : feedbackState === "incorrect"
+          ? `Incorrect. ${larger.numerator} over ${larger.denominator} is larger.`
+          : `Which is larger: ${problem.ratioA.numerator} over ${problem.ratioA.denominator}, or ${problem.ratioB.numerator} over ${problem.ratioB.denominator}?`;
+  }
 
   return (
     <GameCard>
-      {!isPlaying ? (
+      <ScreenReaderStatus message={announcement} />
+      {summary ? (
+        <SessionSummary result={summary} onBack={() => setSummary(null)} onPlayAgain={startGame} />
+      ) : !isPlaying ? (
         <>
           <GameCardHeader
             title="Ratio Comparison"
@@ -174,6 +216,12 @@ export function RatioGame() {
                 </button>
               </div>
             </div>
+
+            <StatsPreview
+              total={record.totalQuestions}
+              correct={record.correctAnswers}
+              bestStreak={record.bestStreak}
+            />
           </GameCardContent>
 
           <GameCardFooter>
@@ -365,7 +413,7 @@ export function RatioGame() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={resetGame}
+              onClick={endSession}
               icon={<RotateCcw className="w-4 h-4" />}
             >
               End Session
