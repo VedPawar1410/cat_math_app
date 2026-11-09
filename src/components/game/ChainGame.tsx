@@ -19,6 +19,8 @@ import {
 import { GameCard, GameCardHeader, GameCardContent, GameCardFooter } from "@/components/ui/GameCard";
 import { Button } from "@/components/ui/Button";
 import { NumPad } from "@/components/ui/NumPad";
+import { ProgressChart } from "@/components/ui/ProgressChart";
+import { ProgressComparison } from "@/components/ui/ProgressComparison";
 import { useChainStore } from "@/lib/chainStore";
 import { useCancellableTimeout } from "@/hooks/useCancellableTimeout";
 import { ScreenReaderStatus } from "@/components/ui/ScreenReaderStatus";
@@ -323,6 +325,7 @@ export function ChainGame() {
           >
             Start Chain
           </Button>
+          <ProgressChart mode="chain" level={difficulty} />
         </GameCardFooter>
       </GameCard>
     );
@@ -497,6 +500,8 @@ export function ChainGame() {
                 {stats.finalScore}
               </div>
             </div>
+
+            {phase === "complete" && <ProgressComparison />}
 
             {/* Stats grid */}
             <div className="grid grid-cols-2 gap-3">

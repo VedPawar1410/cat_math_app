@@ -16,6 +16,7 @@ import {
 import { useCancellableTimeout } from "@/hooks/useCancellableTimeout";
 import { useSessionRecorder, SessionResult } from "@/hooks/useSessionRecorder";
 import { usePracticeStore } from "@/lib/practiceStore";
+import { ProgressChart } from "@/components/ui/ProgressChart";
 import { SessionSummary } from "./SessionSummary";
 import { StatsPreview } from "@/components/ui/StatsPreview";
 import { ScreenReaderStatus } from "@/components/ui/ScreenReaderStatus";
@@ -86,9 +87,9 @@ export function PercentageGame() {
   }, [cancelNextProblem]);
 
   const endSession = useCallback(() => {
-    setSummary(finishSession());
+    setSummary(finishSession("percentage", difficulty));
     resetGame();
-  }, [finishSession, resetGame]);
+  }, [finishSession, resetGame, difficulty]);
 
   const handleSubmitAnswer = useCallback(() => {
     if (!problem || !inputValue.trim()) return;
@@ -268,6 +269,7 @@ export function PercentageGame() {
             >
               Start Practice
             </Button>
+            <ProgressChart mode="percentage" level={difficulty} />
           </GameCardFooter>
         </>
       ) : (

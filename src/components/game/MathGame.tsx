@@ -13,6 +13,7 @@ import { useCancellableTimeout } from "@/hooks/useCancellableTimeout";
 import { useSessionRecorder, SessionResult } from "@/hooks/useSessionRecorder";
 import { SessionSummary } from "./SessionSummary";
 import { StatsPreview } from "@/components/ui/StatsPreview";
+import { ProgressChart } from "@/components/ui/ProgressChart";
 import { ScreenReaderStatus } from "@/components/ui/ScreenReaderStatus";
 import { EndSessionButton } from "@/components/ui/EndSessionButton";
 
@@ -80,9 +81,9 @@ export function MathGame() {
   }, [cancelNextProblem]);
 
   const endSession = useCallback(() => {
-    setSummary(finishSession());
+    setSummary(finishSession(`math-${operation}`, difficulty));
     resetGame();
-  }, [finishSession, resetGame]);
+  }, [finishSession, resetGame, operation, difficulty]);
 
   const handleSubmitAnswer = useCallback(() => {
     if (!problem || !inputValue.trim()) return;
@@ -272,6 +273,7 @@ export function MathGame() {
             >
               Start Practice
             </Button>
+            <ProgressChart mode={`math-${operation}`} level={difficulty} />
           </GameCardFooter>
         </>
       ) : (

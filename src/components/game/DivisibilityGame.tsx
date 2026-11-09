@@ -18,6 +18,8 @@ import {
 import { GameCard, GameCardHeader, GameCardContent, GameCardFooter } from "@/components/ui/GameCard";
 import { Button } from "@/components/ui/Button";
 import { NumPad } from "@/components/ui/NumPad";
+import { ProgressChart } from "@/components/ui/ProgressChart";
+import { ProgressComparison } from "@/components/ui/ProgressComparison";
 import { useDivisibilityStore } from "@/lib/divisibilityStore";
 import { ScreenReaderStatus } from "@/components/ui/ScreenReaderStatus";
 import { EndSessionButton } from "@/components/ui/EndSessionButton";
@@ -378,6 +380,7 @@ export function DivisibilityGame() {
           >
             Start Practice
           </Button>
+          <ProgressChart mode="divisibility" level={difficulty} />
         </GameCardFooter>
       </GameCard>
     );
@@ -724,6 +727,8 @@ export function DivisibilityGame() {
             </div>
             <div className="text-4xl font-bold text-text-primary">{sessionAccuracy}%</div>
           </div>
+
+          <ProgressComparison />
 
           {/* Breakdown */}
           <div className="grid grid-cols-2 gap-3">

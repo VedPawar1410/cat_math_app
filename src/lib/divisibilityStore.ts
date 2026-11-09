@@ -7,6 +7,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { useProgressStore } from "./progressStore";
 import {
   DivisibilityDifficulty,
   DivisibilityProblem,
@@ -208,6 +209,13 @@ export const useDivisibilityStore = create<DivisibilityGameState>()(
 
         const correctDiv = results.filter((r) => r.divisibilityCorrect).length;
         const correctRem = results.filter((r) => r.remainderCorrect).length;
+        useProgressStore.getState().logSession({
+          mode: "divisibility",
+          level: get().difficulty,
+          timesMs: results.map((r) => r.timeMs),
+          correct: results.filter((r) => r.divisibilityCorrect && r.remainderCorrect).length,
+        });
+
         const totalAnswers = results.length * 2;
         const sessionAccuracy =
           totalAnswers > 0

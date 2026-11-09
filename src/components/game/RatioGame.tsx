@@ -14,6 +14,7 @@ import {
 import { useCancellableTimeout } from "@/hooks/useCancellableTimeout";
 import { useSessionRecorder, SessionResult } from "@/hooks/useSessionRecorder";
 import { usePracticeStore } from "@/lib/practiceStore";
+import { ProgressChart } from "@/components/ui/ProgressChart";
 import { SessionSummary } from "./SessionSummary";
 import { StatsPreview } from "@/components/ui/StatsPreview";
 import { ScreenReaderStatus } from "@/components/ui/ScreenReaderStatus";
@@ -84,9 +85,9 @@ export function RatioGame() {
   }, [cancelNextProblem]);
 
   const endSession = useCallback(() => {
-    setSummary(finishSession());
+    setSummary(finishSession("ratio", difficulty));
     resetGame();
-  }, [finishSession, resetGame]);
+  }, [finishSession, resetGame, difficulty]);
 
   const handleAnswer = useCallback((answer: "A" | "B") => {
     if (!problem || feedbackState !== "neutral") return;
@@ -235,6 +236,7 @@ export function RatioGame() {
             >
               Start Practice
             </Button>
+            <ProgressChart mode="ratio" level={difficulty} />
           </GameCardFooter>
         </>
       ) : (

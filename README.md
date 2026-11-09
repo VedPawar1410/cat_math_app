@@ -8,7 +8,7 @@ A keyboard-first mental math trainer for CAT and similar exams, with five drill 
 
 | Headline metric | Result |
 |---|---|
-| Automated tests | 75 passing |
+| Automated tests | 93 passing |
 | Percentage grading | 0 errors across all 78,908 level/question combinations |
 | Lighthouse (mobile, production) | Accessibility 100, Best Practices 100, SEO 100 |
 | axe WCAG A/AA | 0 violations across 18 screens |
@@ -25,7 +25,7 @@ A keyboard-first mental math trainer for CAT and similar exams, with five drill 
 | **Chain** | 10-20 additions where each answer feeds the next | 5 levels, numbers grow as the chain goes on |
 | **Divisibility** | Is it divisible, then what is the remainder | 5 levels, 5-20 problems, negative remainders optional |
 
-Sessions end with a summary. Level and stats are saved on your device.
+Sessions end with a summary that compares your median time with your last 5 sessions at that level. A chart below the Start button shows your speed and accuracy trend for the selected mode and level. Level, stats and session history are saved on your device.
 
 | Key | Action |
 |---|---|
@@ -71,7 +71,7 @@ Measured on 8 November 2026. Lighthouse and load figures come from the productio
 
 | Check | Before | After |
 |---|---|---|
-| Tests | 0 | 75 |
+| Tests | 0 | 93 |
 | Installed iPhone app can scroll | No, the bottom was cut off | Yes |
 | Enter and End on a 390x844 screen, measured in Chrome | End off screen in 4 of 5 modes | On screen in every mode, no scrolling |
 | Percentage combinations graded wrongly | 18 of 78,908 | 0 of 78,908 |
@@ -118,6 +118,8 @@ src/
       NumPad.tsx                On-screen number pad
       ScreenReaderStatus.tsx    Live region for announcements
       StatsPreview.tsx          Lifetime stats on the setup screen
+      ProgressChart.tsx         Speed trend for the selected mode and level
+      ProgressComparison.tsx    This session against recent ones
   hooks/
     useCancellableTimeout.ts    Delayed action that can be cancelled
     useSessionRecorder.ts       Tallies a session for the summary
@@ -127,6 +129,7 @@ src/
     practiceStore.ts            Percentage and Ratio settings and stats
     chainStore.ts               Chain game state and stats
     divisibilityStore.ts        Divisibility game state and stats
+    progressStore.ts            One row per finished session, and the trend maths
     __tests__/                  Engine and store tests
   types/next-pwa.d.ts           Types for next-pwa
 public/                         Icons, manifest (sw.js is generated at build)
@@ -171,7 +174,9 @@ Hosted on Vercel, and every push to `main` deploys to production.
 
 ## Limitations
 
-- Progress stays on one device and browser. There are no accounts or sync.
+- Progress stays on one device and browser. There are no accounts or sync, so the app can't report how much its users improved overall.
+- The speed chart starts empty. Earlier sessions weren't logged per session, so there's nothing to backfill. Sessions under 3 answers aren't logged.
+- The chart sits below the Start button, so Ratio, Chain and Divisibility need a scroll to see it on a 390x844 phone. Its layout was measured in Chrome, not on a real iPhone.
 - Difficulty is chosen manually. It doesn't adapt to how you're doing.
 - First-visit load on a slow phone is still about 3.6 s in the lab. Only repeat visits got faster.
 - 18 advisories remain in the production dependency tree. Most look like `next-pwa` build tooling (workbox, rollup, babel), but I haven't traced each one. `next-pwa` itself is unmaintained.
@@ -255,6 +260,25 @@ I built this in layers while preparing for CAT, then came back to it ten months 
 | 4.7 | Took the notch areas out of the page's minimum height | The page was as tall as the screen plus the safe areas, so it could never fit |
 | 4.8 | Added a test that fails if `overflow` returns to the standalone rules | Fixes the cause permanently, not just this time |
 | 4.9 | Added GitHub Actions for lint, tests and the build | Closes the "no CI" gap from Layer 3, so a broken commit shows up without me remembering to run anything |
+
+### Layer 5 - Measuring improvement (November 2026, a session log and a hand-drawn SVG chart)
+
+*What I built:* One saved row per finished session in all 5 modes, a speed and accuracy trend on each setup screen, and a line on the results screen comparing the session with recent ones.
+
+| # | Mistake | What actually happened | Lesson |
+|---|---|---|---|
+| 5.1 | **Assumed the data already existed** | I expected per-session times to be saved. Only Math saved times, as one flat list with no dates or session boundaries. The other modes measured time and threw it away. | Read what's actually stored before designing on top of it. |
+| 5.2 | **New UI pushed a control off screen again** | The chart moved Start to 905-986 px on an 844 px screen in 3 of 5 modes. It's the same class of bug as 4.2, and only measuring found it. | Re-measure the phone layout whenever anything is added to a screen. |
+
+| # | Decision | Why |
+|---|---|---|
+| 5.3 | Median per session, not average | One long pause would wreck an average but barely moves a median |
+| 5.4 | Trends kept per mode and level, and Math per operation | Otherwise moving up a level looks like getting slower |
+| 5.5 | Accuracy shown next to speed | Guessing quickly shouldn't look like improving |
+| 5.6 | Sessions under 3 answers aren't logged | Ending after one question would add a meaningless point |
+| 5.7 | Hand-drawn SVG instead of a chart library | A line chart doesn't justify a dependency when first-visit load is already the weakest number |
+| 5.8 | Chart below the Start button | Fixes 5.2: Start is back at 614-824 px, and the chart can't push it down again |
+| 5.9 | Reintroduced 7 bugs to check the new tests | Each one made at least one test fail |
 
 ### Key takeaways
 

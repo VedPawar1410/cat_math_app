@@ -1,6 +1,7 @@
 import { ArrowRight, Play, Trophy } from "lucide-react";
 import { GameCardFooter } from "@/components/ui/GameCard";
 import { Button } from "@/components/ui/Button";
+import { ProgressComparison } from "@/components/ui/ProgressComparison";
 import type { SessionResult } from "@/hooks/useSessionRecorder";
 
 interface SessionSummaryProps {
@@ -13,7 +14,7 @@ export function SessionSummary({ result, onBack, onPlayAgain }: SessionSummaryPr
   const accuracy = Math.round((result.correct / result.answered) * 100);
   const tiles = [
     { label: "Correct", value: `${result.correct}/${result.answered}` },
-    { label: "Avg Time", value: `${result.averageSeconds}s` },
+    { label: "Median", value: `${result.medianSeconds}s` },
     { label: "Best Streak", value: String(result.bestStreak) },
   ];
 
@@ -36,6 +37,8 @@ export function SessionSummary({ result, onBack, onPlayAgain }: SessionSummaryPr
           </div>
           <div className="text-4xl font-bold text-text-primary">{accuracy}%</div>
         </div>
+
+        <ProgressComparison />
 
         <div className="grid grid-cols-3 gap-3">
           {tiles.map((tile) => (

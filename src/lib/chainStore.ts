@@ -7,6 +7,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { useProgressStore } from "./progressStore";
 import {
   ChainDifficulty,
   ChainStep,
@@ -189,6 +190,13 @@ export const useChainStore = create<ChainGameState>()(
           completed
         );
         
+        useProgressStore.getState().logSession({
+          mode: "chain",
+          level: difficulty,
+          timesMs: stepResults.filter((r) => r.userAnswer !== null).map((r) => r.timeMs),
+          correct: correctSteps,
+        });
+
         const newHistoryEntry: ChainHistoryEntry = {
           date: Date.now(),
           difficulty,
