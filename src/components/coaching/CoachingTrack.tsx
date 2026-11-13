@@ -1,9 +1,11 @@
 "use client";
 
-import { ChevronRight } from "lucide-react";
-import { chapters } from "@/content/coaching";
+import { findChapter } from "@/content/coaching";
 import { TopBar } from "@/components/ui/TopBar";
 import type { CoachingRoute, Route } from "@/lib/route";
+import { ChapterList } from "./ChapterList";
+import { TrickList } from "./TrickList";
+import { TrickLearn } from "./TrickLearn";
 
 interface CoachingTrackProps {
   route: CoachingRoute;
@@ -11,29 +13,52 @@ interface CoachingTrackProps {
   onHome: () => void;
 }
 
-/** The coaching track. Chapter screens and Learn views arrive in the next step. */
-export function CoachingTrack({ navigate, onHome }: CoachingTrackProps) {
+function NotFound({ message, onBack }: { message: string; onBack: () => void }) {
   return (
     <>
-      <TopBar title="My CAT coaching tricks" backLabel="Home" onBack={onHome} />
-      <div className="w-full max-w-md space-y-3">
-        {chapters.map((chapter) => (
-          <button
-            key={chapter.id}
-            type="button"
-            onClick={() => navigate({ screen: "chapter", chapterId: chapter.id })}
-            className="w-full glass-card rounded-2xl p-4 flex items-center gap-3 text-left hover:border-neon-indigo/50 transition-colors"
-          >
-            <span className="flex-1 min-w-0">
-              <span className="block text-lg font-semibold text-text-primary">{chapter.title}</span>
-              <span className="block text-sm text-text-muted">{chapter.summary}</span>
-              <span className="block text-xs text-text-muted mt-1">{chapter.tricks.length} tricks</span>
-            </span>
-            <ChevronRight className="w-5 h-5 shrink-0 text-text-muted" />
-          </button>
-        ))}
-        <p className="text-xs text-text-muted text-center">More chapters as the classes cover them.</p>
-      </div>
+      <TopBar title="Not found" backLabel="Chapters" onBack={onBack} />
+      <p className="w-full max-w-md glass-card rounded-2xl p-4 text-sm text-text-secondary">{message}</p>
     </>
   );
+}
+
+/** Chapters, then tricks, then a trick's Learn view or its practice drill. */
+export function CoachingTrack({ route, navigate, onHome }: CoachingTrackProps) {
+  const toChapters = () => navigate({ screen: "chapters" });
+
+  if (route.screen === "chapters") {
+    return <ChapterList onHome={onHome} onOpen={(chapterId) => navigate({ screen: "chapter", chapterId })} />;
+  }
+
+  const chapter = findChapter(route.chapterId);
+  if (!chapter) return <NotFound message="That chapter isn't here yet." onBack={toChapters} />;
+
+  if (route.screen === "chapter") {
+    return (
+      <TrickList
+        chapter={chapter}
+        onBack={toChapters}
+        onOpen={(trickId) => navigate({ screen: "trick", chapterId: chapter.id, trickId })}
+      />
+    );
+  }
+
+  const trick = chapter.tricks.find((item) => item.id === route.trickId);
+  if (!trick) return <NotFound message="That trick isn't in this chapter." onBack={toChapters} />;
+  const toChapter = () => navigate({ screen: "chapter", chapterId: chapter.id });
+  const toTrick = () => navigate({ screen: "trick", chapterId: chapter.id, trickId: trick.id });
+
+  if (route.screen === "trick") {
+    return (
+      <TrickLearn
+        chapter={chapter}
+        trick={trick}
+        onBack={toChapter}
+        onPractice={(drillId) => navigate({ screen: "drill", chapterId: chapter.id, trickId: trick.id, drillId })}
+      />
+    );
+  }
+
+  // Practice screens are wired up in the next step
+  return <NotFound message="Practice for this trick is coming in the next build step." onBack={toTrick} />;
 }

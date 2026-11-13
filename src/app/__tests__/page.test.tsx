@@ -51,6 +51,69 @@ describe("home screen and tracks", () => {
     expect(await screen.findByRole("button", { name: /Percentages/ })).toBeTruthy();
   });
 
+  it("a chapter lists its tricks and what's coming later", async () => {
+    render(<Home />);
+    fireEvent.click(screen.getByRole("button", { name: /My CAT coaching tricks/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /Percentages/ }));
+    expect(window.location.hash).toBe("#coaching=percentages");
+    for (const title of ["The % chart (1/2 to 1/20)", "Memory bank", "x% of N", "More vs less"]) {
+      expect(screen.getByRole("button", { name: new RegExp(title.replace(/[()%/]/g, ".")) })).toBeTruthy();
+    }
+    expect(screen.getByText("Coming later")).toBeTruthy();
+    expect(screen.getByText(/Percentage point/)).toBeTruthy();
+  });
+
+  it("a trick's Learn view shows the rule, worked examples and traps", async () => {
+    window.history.replaceState(null, "", "/#coaching=percentages/x-percent-of-n");
+    render(<Home />);
+    expect(await screen.findByRole("heading", { name: "Rule" })).toBeTruthy();
+    expect(screen.getByText(/Whatever number is given, it is 100%/)).toBeTruthy();
+    expect(screen.getByText("44.44% of 270")).toBeTruthy();
+    expect(screen.getByText("Handout Q1(c)")).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Common traps" })).toBeTruthy();
+    expect(screen.getByText(/Reading 2% as 1\/5/)).toBeTruthy();
+  });
+
+  it("the chart Learn view shows the chart values from class", async () => {
+    window.history.replaceState(null, "", "/#coaching=percentages/percent-chart");
+    render(<Home />);
+    expect(await screen.findByText("14.28%")).toBeTruthy();
+    expect(screen.getByText("133.33%")).toBeTruthy();
+  });
+
+  it("says so when the class gave no examples or traps", async () => {
+    window.history.replaceState(null, "", "/#coaching=percentages/memory-bank");
+    render(<Home />);
+    expect(await screen.findAllByText("None noted in class yet.")).toHaveLength(2);
+    expect(screen.getByText("900")).toBeTruthy();
+    expect(screen.getByText("3375")).toBeTruthy();
+  });
+
+  it("Practice opens the trick's drill", async () => {
+    window.history.replaceState(null, "", "/#coaching=percentages/x-percent-of-n");
+    render(<Home />);
+    fireEvent.click(await screen.findByRole("button", { name: /Practice: x% of N/ }));
+    expect(window.location.hash).toBe("#coaching=percentages/x-percent-of-n/practice/percent-of");
+  });
+
+  it("back controls walk up the screens", async () => {
+    window.history.replaceState(null, "", "/#coaching=percentages/more-vs-less");
+    render(<Home />);
+    fireEvent.click(await screen.findByRole("button", { name: "Percentages" }));
+    expect(window.location.hash).toBe("#coaching=percentages");
+    fireEvent.click(await screen.findByRole("button", { name: "Chapters" }));
+    expect(window.location.hash).toBe("#coaching");
+    fireEvent.click(await screen.findByRole("button", { name: "Home" }));
+    expect(window.location.hash).toBe("");
+  });
+
+  it("an unknown trick shows a way back instead of a blank screen", async () => {
+    window.history.replaceState(null, "", "/#coaching=percentages/nope");
+    render(<Home />);
+    expect(await screen.findByText("That trick isn't in this chapter.")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Chapters" })).toBeTruthy();
+  });
+
   it("an old #mode= link still opens that mode", async () => {
     window.history.replaceState(null, "", "/#mode=chain");
     render(<Home />);
