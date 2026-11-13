@@ -12,6 +12,8 @@ interface NumPadProps {
   disabled?: boolean;
   showDecimal?: boolean;
   showNegative?: boolean;
+  /** A "/" key for fraction answers; sent through onDigit as "/". */
+  showSlash?: boolean;
 }
 
 const buttonBase = `
@@ -52,6 +54,7 @@ export function NumPad({
   disabled = false,
   showDecimal = true,
   showNegative = false,
+  showSlash = false,
 }: NumPadProps) {
   const handleDigit = (digit: string) => {
     if (!disabled) onDigit(digit);
@@ -121,8 +124,18 @@ export function NumPad({
           </motion.button>
         ))}
 
-        {/* Row 4: ./- 0 Delete */}
-        {showDecimal ? (
+        {/* Row 4: ./-// 0 Delete */}
+        {showSlash ? (
+          <motion.button
+            whileTap={buttonVariants.tap}
+            onClick={() => handleDigit("/")}
+            aria-label="Fraction bar"
+            disabled={disabled}
+            className={`${actionButton} h-12 sm:h-14`}
+          >
+            /
+          </motion.button>
+        ) : showDecimal ? (
           <motion.button
             whileTap={buttonVariants.tap}
             onClick={handleDecimal}

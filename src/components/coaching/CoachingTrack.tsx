@@ -1,6 +1,9 @@
 "use client";
 
 import { findChapter } from "@/content/coaching";
+import type { DrillId } from "@/content/coaching/types";
+import { findDrill } from "@/lib/engines/drills";
+import { DrillGame } from "./DrillGame";
 import { TopBar } from "@/components/ui/TopBar";
 import type { CoachingRoute, Route } from "@/lib/route";
 import { ChapterList } from "./ChapterList";
@@ -59,6 +62,7 @@ export function CoachingTrack({ route, navigate, onHome }: CoachingTrackProps) {
     );
   }
 
-  // Practice screens are wired up in the next step
-  return <NotFound message="Practice for this trick is coming in the next build step." onBack={toTrick} />;
+  const drill = trick.drills.includes(route.drillId as DrillId) ? findDrill(route.drillId) : undefined;
+  if (!drill) return <NotFound message="That practice drill isn't part of this trick." onBack={toTrick} />;
+  return <DrillGame key={drill.id} drill={drill} trickTitle={trick.title} onBack={toTrick} />;
 }

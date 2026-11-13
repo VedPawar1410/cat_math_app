@@ -107,6 +107,19 @@ describe("home screen and tracks", () => {
     expect(window.location.hash).toBe("");
   });
 
+  it("a practice link opens the drill, ready to start", async () => {
+    window.history.replaceState(null, "", "/#coaching=percentages/percent-chart/practice/fraction-to-percent");
+    render(<Home />);
+    expect(await screen.findByRole("button", { name: /Start Practice/ })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Learn" })).toBeTruthy();
+  });
+
+  it("a drill that doesn't belong to the trick shows a way back", async () => {
+    window.history.replaceState(null, "", "/#coaching=percentages/percent-chart/practice/squares");
+    render(<Home />);
+    expect(await screen.findByText("That practice drill isn't part of this trick.")).toBeTruthy();
+  });
+
   it("an unknown trick shows a way back instead of a blank screen", async () => {
     window.history.replaceState(null, "", "/#coaching=percentages/nope");
     render(<Home />);
