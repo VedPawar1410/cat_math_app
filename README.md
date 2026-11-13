@@ -1,6 +1,6 @@
 # CAT-Fast
 
-A keyboard-first mental math trainer for CAT and similar exams, with five drill modes and offline support. It runs entirely in the browser.
+A keyboard-first mental math trainer for CAT and similar exams, with offline support. It has two tracks: five drill modes based on Arun Sharma's book, and "My CAT coaching tricks", which teaches and drills the tricks from my own coaching classes, chapter by chapter. It runs entirely in the browser.
 
 **Live:** [cat-math-app.vercel.app](https://cat-math-app.vercel.app/)
 
@@ -8,14 +8,18 @@ A keyboard-first mental math trainer for CAT and similar exams, with five drill 
 
 | Headline metric | Result |
 |---|---|
-| Automated tests | 93 passing |
+| Automated tests | 214 passing |
 | Percentage grading | 0 errors across all 78,908 level/question combinations |
 | Lighthouse (mobile, production) | Accessibility 100, Best Practices 100, SEO 100 |
-| axe WCAG A/AA | 0 violations across 18 screens |
-| Offline | All 5 modes work with the server shut down |
+| axe WCAG A/AA | 0 violations across the 18 original screens and 43 coaching-track screen states |
+| Offline | Both tracks work with the server shut down, including a deep link to a drill |
 | Lint | 0 errors, 0 warnings |
 
 ## Drill modes
+
+The app opens on a choice between the two tracks. Each screen has a back control at the top, which stays on screen while you scroll, because the installed iPhone app has no back button.
+
+### Arun Sharma track
 
 | Mode | What you practise | Difficulty |
 |---|---|---|
@@ -27,10 +31,26 @@ A keyboard-first mental math trainer for CAT and similar exams, with five drill 
 
 Sessions end with a summary that compares your median time with your last 5 sessions at that level. A chart below the Start button shows your speed and accuracy trend for the selected mode and level. Level, stats and session history are saved on your device.
 
+### My CAT coaching tricks track
+
+Chapters come from my TIME coaching class notes, and only what the class taught is included. The first chapter is **Percentages** (class of 12 Nov 2026). Each trick has a Learn view (the rule, tables to remember, worked examples with their class source, and common traps) and a Practice button.
+
+| Trick | Learn view | Practice drills |
+|---|---|---|
+| **The % chart (1/2 to 1/20)** | The chart from class, plus the multiples used in class (2/3, 4/9, 3/8, 5/8, 7/8, 4/5, 5/4, 4/3) | Fraction to %, % to fraction (3 levels each, including over 100%) |
+| **Memory bank** | Squares to 30, cubes to 15, tables 13 to 25 | Squares 6-30, square roots, cubes 2-15, cube roots, tables 13-25 × 2-12 |
+| **x% of N** | The given number is 100%, chart fractions, splits, the swap rule | Chart fractions, class multiples and splits, swap rule (whole-number answers) |
+| **More vs less** | The base rule, "what % of", and the one-step chart ladder | Chart ladder, ladder or the long way, two numbers |
+
+**Coming later** (listed in class, not taught yet): successive percentage change, percentage point, and reduction and consumption.
+
+Recurring percentages are shown cut off to 2 decimals, as on the class chart (16.66, 14.28, 3/7 = 42.85). An answer is accepted if it's the cut-off or the rounded value (42.85 or 42.86). Typing 42.84, which is 3 × the cut-off 14.28, gets a message explaining that trap. Fraction answers accept any equivalent fraction, so 8/6 counts as 4/3.
+
 | Key | Action |
 |---|---|
-| `Enter` | Start, submit, or leave a summary |
+| `Enter` | Start, submit, skip to the next question after feedback (coaching drills), or leave a summary |
 | `Esc` | End the session |
+| `/` | Fraction bar, in "% to fraction" drills |
 | `1` / `←` / `A` and `2` / `→` / `B` | Pick the left or right ratio |
 | `Y` / `1` and `N` / `0` | Divisible: yes or no |
 | `Tab` | Skip a Chain step |
@@ -39,10 +59,16 @@ Sessions end with a summary that compares your median time with your last 5 sess
 ## How it works
 
 ```text
+ URL hash (#mode=ratio, #coaching=percentages/x-percent-of-n/...)
+             |  parseRoute / useHashRoute
+             v
+ Home screen ── Arun Sharma track ── Coaching track: chapters, tricks,
+                                     Learn view (from src/content)
+             |
  Keyboard or on-screen NumPad
              |
              v
- Game component (Math, Percentage, Ratio, Chain, Divisibility)
+ Game component (5 Arun Sharma games, or one DrillGame for every coaching drill)
      |                 |                        |
      v                 v                        v
  Engine            Hooks                    Zustand stores
@@ -64,6 +90,10 @@ There is no backend. Questions are generated in the browser, so there's no datas
 - **Chain feedback keeps its own copy of the answered step.** The store moves on at once, so you can type the next answer straight away.
 - **One always-mounted status element per game.** Screen readers only reliably announce changes to a live region that already exists.
 - **Shortcuts use `#mode=ratio`, not `?mode=ratio`.** The service worker's cached home page matches the exact URL, so a query string would miss it offline.
+- **Every screen lives in the hash, not in Next.js routes.** The app stays on `/`, so the one cached page covers both tracks offline with no service worker changes. Separate routes would only work offline after being visited once. Old `#mode=` links still work.
+- **Coaching content is typed data in `src/content/coaching/`.** A chapter is one file plus one line in `index.ts`. A test checks every chart value typed from my notes against long division.
+- **One `DrillGame` for every coaching drill.** Engines return a question with its own grader, so the shell, summary, progress chart and saved level are shared rather than copied per drill.
+- **Coaching engines are tested a different way from how they compute.** The tests use BigInt long division, repeated addition and worked numbers, never the same formula.
 
 ## Results
 
@@ -71,7 +101,7 @@ Measured on 8 November 2026. Lighthouse and load figures come from the productio
 
 | Check | Before | After |
 |---|---|---|
-| Tests | 0 | 93 |
+| Tests | 0 | 214 |
 | Installed iPhone app can scroll | No, the bottom was cut off | Yes |
 | Enter and End on a 390x844 screen, measured in Chrome | End off screen in 4 of 5 modes | On screen in every mode, no scrolling |
 | Percentage combinations graded wrongly | 18 of 78,908 | 0 of 78,908 |
@@ -93,6 +123,18 @@ Generated answers were also simulated before the rebuild: 250,000 questions each
 
 To check that the tests catch real bugs, I reintroduced 8 of them one at a time, covering rounding, timers, Chain feedback, question timing, input resets and the iPhone scroll lock. Each one made at least one test fail.
 
+**Coaching track (measured 13 Nov 2026, production build in Chrome):**
+
+| Check | Result |
+|---|---|
+| Back control on screen, at the top and after scrolling to the bottom, on every new screen at 390x844 (notch simulated) | Yes. The longest Learn view is 2,691 px |
+| Practice bar on screen while scrolling a Learn view | Yes |
+| All 9 drills at 390x844: play screen fits with no scrolling, End and Enter visible | Yes, including during feedback after wrong answers |
+| The same at 375x667 | Yes |
+| axe WCAG A/AA: home, chapter list, chapter, 4 Learn views, and each drill's setup, play, feedback and summary | 0 violations |
+| Offline with the server shut down: deep link to a drill, Learn view, an old `#mode=ratio` link, home screen | All work |
+| Reintroduced bugs: float rounding (`k/n × 100`), accepting 42.84, a ladder that leaves the chart, dropping old `#mode=` links | Each made tests fail (1, 4, 1 and 9 tests) |
+
 ## Project structure
 
 ```text
@@ -100,9 +142,25 @@ src/
   app/
     globals.css                 Theme colours and global styles
     layout.tsx                  Root layout, metadata, service worker setup
-    page.tsx                    Mode switcher and #mode= links
+    page.tsx                    Picks the screen from the URL hash
+    __tests__/                  Home screen, routing and Learn view tests
+  content/
+    coaching/
+      types.ts                  Chapter, trick, worked example and drill id types
+      percentages.ts            Percentages chapter, from my class notes
+      index.ts                  The list of chapters
+    __tests__/                  Checks the content against exact arithmetic
   components/
     ServiceWorkerRegister.tsx   Registers the worker and caches the home page
+    home/HomeScreen.tsx         The choice between the two tracks
+    tracks/ArunSharmaTrack.tsx  The five original modes and their tabs
+    coaching/
+      CoachingTrack.tsx         Chapters, tricks, Learn view or drill, from the route
+      ChapterList.tsx           Chapters in the coaching track
+      TrickList.tsx             Tricks in a chapter, and what's coming later
+      TrickLearn.tsx            Rule, tables, worked examples, traps, Practice
+      DrillGame.tsx             One timed practice session for any coaching drill
+      __tests__/                Drill screen tests
     game/
       MathGame.tsx              Addition and subtraction
       MathQuestion.tsx          Question display for Math
@@ -115,6 +173,7 @@ src/
     ui/
       Button.tsx, GameCard.tsx  Shared UI pieces
       EndSessionButton.tsx      Always-visible way out of a session
+      TopBar.tsx                Sticky back control and screen title
       NumPad.tsx                On-screen number pad
       ScreenReaderStatus.tsx    Live region for announcements
       StatsPreview.tsx          Lifetime stats on the setup screen
@@ -123,10 +182,18 @@ src/
   hooks/
     useCancellableTimeout.ts    Delayed action that can be cancelled
     useSessionRecorder.ts       Tallies a session for the summary
+    useHashRoute.ts             The current screen from the hash, and navigation
   lib/
-    engines/                    One pure question engine per mode
+    route.ts                    Reads and writes the hash for every screen
+    engines/                    One pure question engine per mode, plus:
+      percentMath.ts            Exact percentages: cut off, rounded, grading, fractions
+      fractionPercentEngine.ts  Fraction to % and back
+      memoryBankEngine.ts       Squares, cubes, roots and tables
+      percentOfEngine.ts        x% of N
+      moreLessEngine.ts         More vs less and the chart ladder
+      drills.ts                 Every coaching drill, by id
     store.ts                    Math settings and stats
-    practiceStore.ts            Percentage and Ratio settings and stats
+    practiceStore.ts            Saved level and stats for Percentage, Ratio and each coaching drill
     chainStore.ts               Chain game state and stats
     divisibilityStore.ts        Divisibility game state and stats
     progressStore.ts            One row per finished session, and the trend maths
@@ -181,7 +248,13 @@ Hosted on Vercel, and every push to `main` deploys to production.
 - First-visit load on a slow phone is still about 3.6 s in the lab. Only repeat visits got faster.
 - 18 advisories remain in the production dependency tree. Most look like `next-pwa` build tooling (workbox, rollup, babel), but I haven't traced each one. `next-pwa` itself is unmaintained.
 - On a real iPhone I've checked installing to the Home Screen, opening offline, the mode tabs, fast numpad taps and pinch-zoom. The later layout fix was measured in Chrome at iPhone sizes and hasn't been re-checked on the phone.
-- On a 375x667 phone, Enter and End stay on screen but some modes need a few pixels of scrolling.
+- On a 375x667 phone, Enter and End stay on screen but some Arun Sharma modes need a few pixels of scrolling. The coaching drills fit with no scrolling.
+- The coaching track has one chapter so far. Simple Interest and reduction and consumption are left out until the class covers their questions.
+- Adding a chapter takes one data file plus one line in `src/content/coaching/index.ts`. The browser bundle can't discover files on its own.
+- The coaching screens were measured in Chrome at iPhone sizes, not on a real iPhone, and not with a real screen reader.
+- The 42.84 trap message is about twice as long as other feedback. It didn't come up in my random measuring runs, so the feedback area may grow by a line or two when it does. End stays at the top either way.
+- Learn views are long (2,293 to 2,691 px at 390 px wide). The back control and Practice button stay on screen, but the content scrolls.
+- The session log keeps the last 500 sessions across every mode, and each coaching drill now adds its own rows, so older history drops off sooner.
 - Not tested with a real screen reader. Announcements were checked by reading the live region.
 - Ratio levels are defined only by the percentage gap. The two ratios aren't guaranteed to share a 10% or 1% band: at level 5, 89% share a 10% band and 11% share a 1% band.
 - Percentage answers must be rounded exactly, so a close estimate counts as wrong.
@@ -280,6 +353,27 @@ I built this in layers while preparing for CAT, then came back to it ten months 
 | 5.8 | Chart below the Start button | Fixes 5.2: Start is back at 614-824 px, and the chart can't push it down again |
 | 5.9 | Reintroduced 7 bugs to check the new tests | Each one made at least one test fail |
 
+### Layer 6 - The coaching track (13 November 2026, typed content files, hash routing, a generic drill shell)
+
+*What I built:* A home screen with two tracks, and a "My CAT coaching tricks" track whose Percentages chapter comes from my class notes, with Learn views and 9 practice drills.
+
+| # | Mistake | What actually happened | Lesson |
+|---|---|---|---|
+| 6.1 | **The class's own answer had a rounding slip** | 30% less was written as 42.84% more: 3 × the cut-off 14.28. The exact value is 42.857%, so the cut-off is 42.85 and the rounded value 42.86. | Multiplying a value that's already cut off loses accuracy. The app now explains this when you type 42.84. |
+| 6.2 | **My measuring script lied** | It pressed `1` and Enter in the same instant, before the app had registered the `1`, so no answer was submitted. It reported "Next button missing" on every drill. | Check that a measurement measured what you think before believing a failure, or a pass. |
+| 6.3 | **A test matched the same text twice** | The trap message appears on screen and in the screen-reader live region, so a loose text query found both and failed. | Duplicated text for accessibility is deliberate. Tests should target the element they mean. |
+| 6.4 | **The config's target year blocked BigInt literals** | `tsconfig` targets ES2017, so `100n` failed the type check even though the tests passed. | Run the type check separately. Vitest doesn't do it. |
+
+| # | Decision | Why |
+|---|---|---|
+| 6.5 | Content in typed files, with drill ids as a union type | A chapter is one file, and a typo in a drill id fails the build |
+| 6.6 | Only the forms used in class, and "coming later" for topics not taught | The app should match what I was actually taught, not what I could add |
+| 6.7 | Hash routes instead of Next.js routes | Avoids repeating 1.1: new routes would have needed extra caching to work offline, and would only work after being visited once |
+| 6.8 | Show cut-off values, accept cut-off or rounded, flag 42.84 | Matches the class chart, and makes 6.1 a lesson instead of a silent wrong answer |
+| 6.9 | Engines tested by long division, repeated addition and worked numbers | A test that reuses the engine's formula can't catch the engine's mistake |
+| 6.10 | One generic `DrillGame` | Avoids repeating 2.3: the five original games had drifted apart because each was its own copy |
+| 6.11 | Sticky back control and Practice bar, then measured at two phone sizes | Learn views are long, and 4.2 and 5.2 both came from not measuring |
+
 ### Key takeaways
 
 1. **Claims need tests.** "PWA" sat in my README and config for ten months while offline had never worked once.
@@ -292,7 +386,8 @@ I built this in layers while preparing for CAT, then came back to it ten months 
 
 ## Future improvements
 
-- Finish checking on a real iPhone: the new play-screen layout, stats after reopening the app, and VoiceOver announcements.
+- Finish checking on a real iPhone: the play-screen layout, the coaching track, stats after reopening the app, and VoiceOver announcements.
+- Add coaching chapters as classes cover them, starting with Simple Interest and reduction and consumption.
 - Improve first-visit load. I suspect the entrance animations hide content until JavaScript runs, but haven't confirmed it.
 - Replace `next-pwa` with a maintained option such as Serwist.
 - Add adaptive difficulty and spaced repetition for weak areas.
@@ -304,4 +399,4 @@ I built this in layers while preparing for CAT, then came back to it ten months 
 
 MIT. See [LICENSE](LICENSE).
 
-The Percentage mode is inspired by the "Percentage Rule" in *How to Prepare for Quantitative Aptitude for the CAT* by Arun Sharma.
+The Arun Sharma track's Percentage mode is inspired by the "Percentage Rule" in *How to Prepare for Quantitative Aptitude for the CAT* by Arun Sharma. The coaching track's content comes from my own notes on my TIME coaching classes.
