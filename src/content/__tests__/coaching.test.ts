@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { chapters, findChapter } from "../coaching";
 import { classForms, percentChart } from "../coaching/percentages";
+import { findDrill } from "@/lib/engines/drills";
 
 /**
  * Digit-by-digit long division, kept independent of the engines' formula, so the
@@ -35,6 +36,14 @@ describe("coaching content", () => {
       for (const trick of chapter.tricks) {
         expect(trick.rule.length).toBeGreaterThan(0);
         expect(trick.drills.length).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it("only refers to drills that exist", () => {
+    for (const chapter of chapters) {
+      for (const trick of chapter.tricks) {
+        for (const drill of trick.drills) expect(findDrill(drill)).toBeDefined();
       }
     }
   });
