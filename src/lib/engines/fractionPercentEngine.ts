@@ -1,7 +1,7 @@
 import { classForms, percentChart } from "@/content/coaching/percentages";
 import type { FractionForm } from "@/content/coaching/types";
 import { describeExact, gradeFraction, gradePercent, isCutOff } from "./percentMath";
-import { pick, type DrillDefinition, type DrillLevel, type DrillQuestion } from "./drillTypes";
+import { randomDraw, type Draw, type DrillDefinition, type DrillLevel, type DrillQuestion } from "./drillTypes";
 
 /** Fraction to % and back, using the chart and the multiples used in class. */
 
@@ -21,8 +21,8 @@ function exactNote(form: FractionForm): string {
   return isCutOff(form) ? ` (cut off; exactly ${describeExact(form)}%)` : "";
 }
 
-export function generateFractionToPercent(level: number): DrillQuestion {
-  const form = pick(formsForLevel(level));
+export function generateFractionToPercent(level: number, draw: Draw = randomDraw): DrillQuestion {
+  const form = draw(formsForLevel(level), `level-${level}`);
   return {
     display: `${form.k}/${form.n}`,
     spoken: `${form.k} over ${form.n}, as a percentage`,
@@ -34,8 +34,8 @@ export function generateFractionToPercent(level: number): DrillQuestion {
   };
 }
 
-export function generatePercentToFraction(level: number): DrillQuestion {
-  const form = pick(formsForLevel(level));
+export function generatePercentToFraction(level: number, draw: Draw = randomDraw): DrillQuestion {
+  const form = draw(formsForLevel(level), `level-${level}`);
   return {
     display: `${form.percent}%`,
     spoken: `${form.percent} percent, as a fraction`,

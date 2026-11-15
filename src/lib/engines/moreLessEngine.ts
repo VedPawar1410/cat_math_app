@@ -1,5 +1,5 @@
 import { formatPercent, gradePercent, simplify, type Fraction } from "./percentMath";
-import { pick, randomInt, type DrillDefinition, type DrillLevel, type DrillQuestion } from "./drillTypes";
+import { randomDraw, randomInt, range, type Draw, type DrillDefinition, type DrillLevel, type DrillQuestion } from "./drillTypes";
 
 /**
  * More vs less. Level 1 is the chart ladder (1/n more goes with 1/(n+1) less),
@@ -19,6 +19,15 @@ export const OFF_CHART = [15, 30, 35, 40, 45, 60];
 type Word = "more" | "less";
 const opposite = (word: Word): Word => (word === "more" ? "less" : "more");
 
+/** Every ladder question inside the chart: 1/2 more needs 1/3 less, 1/20 less needs 1/19 more. */
+const LADDER = [
+  ...range(2, 19).map((n) => ({ given: "more" as Word, n })),
+  ...range(3, 20).map((n) => ({ given: "less" as Word, n })),
+];
+const LONG_WAY = OFF_CHART.flatMap((x) => (["more", "less"] as Word[]).map((given) => ({ given, x })));
+const PAIR_VARIANTS = ["less", "more", "low-of-high", "high-of-low"] as const;
+const PAIRS = range(2, 12).flatMap((n) => PAIR_VARIANTS.map((variant) => ({ n, variant })));
+
 function percentQuestion(display: string, answer: Fraction, explanation: string, facts: DrillQuestion["facts"]): DrillQuestion {
   const value = simplify(answer);
   return {
@@ -32,11 +41,9 @@ function percentQuestion(display: string, answer: Fraction, explanation: string,
   };
 }
 
-function ladderQuestion(): DrillQuestion {
-  const given: Word = pick(["more", "less"] as const);
+function ladderQuestion(draw: Draw): DrillQuestion {
+  const { given, n } = draw(LADDER, "ladder");
   const asked = opposite(given);
-  // Stay inside the chart: 1/2 more needs 1/3 less, 1/20 less needs 1/19 more
-  const n = given === "more" ? randomInt(2, 19) : randomInt(3, 20);
   const step = given === "more" ? n + 1 : n - 1;
   const givenPercent = formatPercent({ k: 1, n });
   return percentQuestion(
@@ -47,10 +54,9 @@ function ladderQuestion(): DrillQuestion {
   );
 }
 
-function longWayQuestion(): DrillQuestion {
-  const given: Word = pick(["more", "less"] as const);
+function longWayQuestion(draw: Draw): DrillQuestion {
+  const { given, x } = draw(LONG_WAY, "long-way");
   const asked = opposite(given);
-  const x = pick(OFF_CHART);
   const a = given === "more" ? 100 + x : 100 - x;
   const answer = simplify({ k: x, n: a });
   return percentQuestion(
@@ -61,8 +67,8 @@ function longWayQuestion(): DrillQuestion {
   );
 }
 
-function twoNumbersQuestion(): DrillQuestion {
-  const n = randomInt(2, 12);
+function twoNumbersQuestion(draw: Draw): DrillQuestion {
+  const { n, variant } = draw(PAIRS, "pairs");
   const scale = randomInt(2, 15);
   const low = n * scale;
   const high = (n + 1) * scale;
@@ -73,7 +79,6 @@ function twoNumbersQuestion(): DrillQuestion {
   const setup = `A = ${aValue}, B = ${bValue}.`;
   const diff = high - low;
 
-  const variant = pick(["less", "more", "low-of-high", "high-of-low"] as const);
   if (variant === "less") {
     return percentQuestion(
       `${setup} ${lowName} is less than ${highName} by what %?`,
@@ -106,10 +111,10 @@ function twoNumbersQuestion(): DrillQuestion {
   );
 }
 
-export function generateMoreLess(level: number): DrillQuestion {
-  if (level === 1) return ladderQuestion();
-  if (level === 2) return Math.random() < 0.5 ? ladderQuestion() : longWayQuestion();
-  return twoNumbersQuestion();
+export function generateMoreLess(level: number, draw: Draw = randomDraw): DrillQuestion {
+  if (level === 1) return ladderQuestion(draw);
+  if (level === 2) return Math.random() < 0.5 ? ladderQuestion(draw) : longWayQuestion(draw);
+  return twoNumbersQuestion(draw);
 }
 
 export const moreLessDrill: DrillDefinition = {

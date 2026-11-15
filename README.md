@@ -8,7 +8,7 @@ A keyboard-first mental math trainer for CAT and similar exams, with offline sup
 
 | Headline metric | Result |
 |---|---|
-| Automated tests | 214 passing |
+| Automated tests | 231 passing |
 | Percentage grading | 0 errors across all 78,908 level/question combinations |
 | Lighthouse (mobile, production) | Accessibility 100, Best Practices 100, SEO 100 |
 | axe WCAG A/AA | 0 violations across the 18 original screens and 43 coaching-track screen states |
@@ -44,7 +44,7 @@ Chapters come from my TIME coaching class notes, and only what the class taught 
 
 **Coming later** (listed in class, not taught yet): successive percentage change, percentage point, and reduction and consumption.
 
-Recurring percentages are shown cut off to 2 decimals, as on the class chart (16.66, 14.28, 3/7 = 42.85). An answer is accepted if it's the cut-off or the rounded value (42.85 or 42.86). Typing 42.84, which is 3 × the cut-off 14.28, gets a message explaining that trap. Fraction answers accept any equivalent fraction, so 8/6 counts as 4/3.
+Recurring percentages are shown cut off to 2 decimals, as on the class chart (16.66, 14.28, 3/7 = 42.85). An answer is accepted if it's the cut-off or the rounded value (42.85 or 42.86). Typing 42.84, which is 3 × the cut-off 14.28, gets a message explaining that trap. Fraction answers accept any equivalent fraction, so 8/6 counts as 4/3. Each practice session works through a level like a shuffled deck: every question comes up once, in random order, before any repeats.
 
 | Key | Action |
 |---|---|
@@ -101,7 +101,7 @@ Measured on 8 November 2026. Lighthouse and load figures come from the productio
 
 | Check | Before | After |
 |---|---|---|
-| Tests | 0 | 214 |
+| Tests | 0 | 231 |
 | Installed iPhone app can scroll | No, the bottom was cut off | Yes |
 | Enter and End on a 390x844 screen, measured in Chrome | End off screen in 4 of 5 modes | On screen in every mode, no scrolling |
 | Percentage combinations graded wrongly | 18 of 78,908 | 0 of 78,908 |
@@ -373,6 +373,7 @@ I built this in layers while preparing for CAT, then came back to it ten months 
 | 6.9 | Engines tested by long division, repeated addition and worked numbers | A test that reuses the engine's formula can't catch the engine's mistake |
 | 6.10 | One generic `DrillGame` | Avoids repeating 2.3: the five original games had drifted apart because each was its own copy |
 | 6.11 | Sticky back control and Practice bar, then measured at two phone sizes | Learn views are long, and 4.2 and 5.2 both came from not measuring |
+| 6.12 | A shuffled deck per session instead of independent random picks | After using it I found random picks kept repeating the same 5 or 6 fractions: 9 random picks from 9 fractions cover all 9 in under 5% of rounds. The deck covers every question once per round, and tests check each level |
 
 ### Key takeaways
 

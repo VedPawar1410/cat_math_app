@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowRight, Clock, Flame, Play, Target } from "lucide-react";
 import { GameCard, GameCardContent, GameCardFooter, GameCardHeader } from "@/components/ui/GameCard";
 import { Button } from "@/components/ui/Button";
@@ -14,7 +14,7 @@ import { SessionSummary } from "@/components/game/SessionSummary";
 import { useCancellableTimeout } from "@/hooks/useCancellableTimeout";
 import { useSessionRecorder, type SessionResult } from "@/hooks/useSessionRecorder";
 import { newRecord, usePracticeStore, type CoachingPracticeMode } from "@/lib/practiceStore";
-import type { DrillDefinition, DrillQuestion } from "@/lib/engines/drillTypes";
+import { createShuffleDraw, type DrillDefinition, type DrillQuestion } from "@/lib/engines/drillTypes";
 
 type Feedback = "neutral" | "correct" | "incorrect";
 
@@ -55,6 +55,8 @@ export function DrillGame({ drill, trickTitle, onBack }: DrillGameProps) {
   const [summary, setSummary] = useState<SessionResult | null>(null);
   const { schedule: scheduleNext, cancel: cancelNext } = useCancellableTimeout();
   const { startSession, markQuestionShown, recordAnswer, finishSession } = useSessionRecorder();
+  // A fresh shuffled deck each session, so every question in the pool comes up before any repeats
+  const draw = useRef(createShuffleDraw());
 
   useEffect(() => {
     if (!isPlaying || !startTime) return;
@@ -64,7 +66,7 @@ export function DrillGame({ drill, trickTitle, onBack }: DrillGameProps) {
 
   const nextQuestion = useCallback(() => {
     cancelNext();
-    setQuestion(drill.generate(level));
+    setQuestion(drill.generate(level, draw.current));
     markQuestionShown();
     setFeedback("neutral");
     setTrap(null);
@@ -72,6 +74,7 @@ export function DrillGame({ drill, trickTitle, onBack }: DrillGameProps) {
   }, [cancelNext, drill, level, markQuestionShown]);
 
   const startGame = useCallback(() => {
+    draw.current = createShuffleDraw();
     startSession();
     setSummary(null);
     setIsPlaying(true);

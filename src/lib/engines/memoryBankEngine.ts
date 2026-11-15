@@ -1,5 +1,10 @@
 import { gradeInteger } from "./percentMath";
-import { randomInt, type DrillDefinition, type DrillQuestion } from "./drillTypes";
+import { randomDraw, range, type Draw, type DrillDefinition, type DrillQuestion } from "./drillTypes";
+
+const SQUARE_BASES = range(6, 30);
+const CUBE_BASES = range(2, 15);
+/** Every table question, 13 to 25 × 2 to 12, so a session works through all of them. */
+const TABLE_PAIRS = range(13, 25).flatMap((base) => range(2, 12).map((times) => ({ base, times })));
 
 /** Squares to 30, cubes to 15, their roots and tables to 25: the list to memorise from class. */
 
@@ -15,32 +20,31 @@ function integerQuestion(display: string, spoken: string, answer: number, explan
   };
 }
 
-export function generateSquare(): DrillQuestion {
-  const base = randomInt(6, 30);
+export function generateSquare(draw: Draw = randomDraw): DrillQuestion {
+  const base = draw(SQUARE_BASES, "squares");
   return integerQuestion(`${base}²`, `${base} squared`, base * base, `${base}² = ${base * base}`, { base });
 }
 
-export function generateSquareRoot(): DrillQuestion {
-  const root = randomInt(6, 30);
+export function generateSquareRoot(draw: Draw = randomDraw): DrillQuestion {
+  const root = draw(SQUARE_BASES, "square-roots");
   const square = root * root;
   return integerQuestion(`√${square}`, `square root of ${square}`, root, `${root}² = ${square}`, { radicand: square });
 }
 
-export function generateCube(): DrillQuestion {
-  const base = randomInt(2, 15);
+export function generateCube(draw: Draw = randomDraw): DrillQuestion {
+  const base = draw(CUBE_BASES, "cubes");
   const cube = base * base * base;
   return integerQuestion(`${base}³`, `${base} cubed`, cube, `${base}³ = ${cube}`, { base });
 }
 
-export function generateCubeRoot(): DrillQuestion {
-  const root = randomInt(2, 15);
+export function generateCubeRoot(draw: Draw = randomDraw): DrillQuestion {
+  const root = draw(CUBE_BASES, "cube-roots");
   const cube = root * root * root;
   return integerQuestion(`∛${cube}`, `cube root of ${cube}`, root, `${root}³ = ${cube}`, { radicand: cube });
 }
 
-export function generateTable(): DrillQuestion {
-  const base = randomInt(13, 25);
-  const times = randomInt(2, 12);
+export function generateTable(draw: Draw = randomDraw): DrillQuestion {
+  const { base, times } = draw(TABLE_PAIRS, "tables");
   const product = base * times;
   return integerQuestion(`${base} × ${times}`, `${base} times ${times}`, product, `${base} × ${times} = ${product}`, { base, times });
 }
@@ -64,33 +68,33 @@ export const squaresDrill: DrillDefinition = {
   id: "squares",
   title: "Squares",
   levels: ONE_LEVEL("6² to 30²"),
-  generate: generateSquare,
+  generate: (_level, draw) => generateSquare(draw),
 };
 
 export const squareRootsDrill: DrillDefinition = {
   id: "square-roots",
   title: "Square roots",
   levels: ONE_LEVEL("√36 to √900"),
-  generate: generateSquareRoot,
+  generate: (_level, draw) => generateSquareRoot(draw),
 };
 
 export const cubesDrill: DrillDefinition = {
   id: "cubes",
   title: "Cubes",
   levels: ONE_LEVEL("2³ to 15³"),
-  generate: generateCube,
+  generate: (_level, draw) => generateCube(draw),
 };
 
 export const cubeRootsDrill: DrillDefinition = {
   id: "cube-roots",
   title: "Cube roots",
   levels: ONE_LEVEL("∛8 to ∛3375"),
-  generate: generateCubeRoot,
+  generate: (_level, draw) => generateCubeRoot(draw),
 };
 
 export const tablesDrill: DrillDefinition = {
   id: "tables",
   title: "Tables",
   levels: ONE_LEVEL("13 to 25, × 2 to × 12"),
-  generate: generateTable,
+  generate: (_level, draw) => generateTable(draw),
 };

@@ -1,6 +1,6 @@
 import { classForms, percentChart } from "@/content/coaching/percentages";
 import { gradeInteger } from "./percentMath";
-import { pick, randomInt, type DrillDefinition, type DrillLevel, type DrillQuestion } from "./drillTypes";
+import { randomDraw, randomInt, type Draw, type DrillDefinition, type DrillLevel, type DrillQuestion } from "./drillTypes";
 
 /** x% of N with chart-friendly percentages and whole-number answers. */
 
@@ -61,9 +61,10 @@ function formatTenths(tenths: number): string {
   return tenths % 10 === 0 ? String(whole) : `${whole}.${tenths % 10}`;
 }
 
-function swapQuestion(): DrillQuestion {
+function swapQuestion(draw: Draw): DrillQuestion {
+  // Every target has whole-number answers in range, so the loop always ends
+  const { e, p, q } = draw(SWAP_TARGETS, "swap");
   for (;;) {
-    const { e, p, q } = pick(SWAP_TARGETS);
     const answer = randomInt(6, 120);
     // a% of e = answer, so a = answer × q / p; keep a to at most one decimal place
     const tenths = (answer * q * 10) / p;
@@ -81,10 +82,10 @@ function swapQuestion(): DrillQuestion {
   }
 }
 
-export function generatePercentOf(level: number): DrillQuestion {
-  if (level === 1) return fromForm(pick(chartForms), 1000);
-  if (level === 2) return fromForm(pick(multipleForms), 3000);
-  return swapQuestion();
+export function generatePercentOf(level: number, draw: Draw = randomDraw): DrillQuestion {
+  if (level === 1) return fromForm(draw(chartForms, "chart"), 1000);
+  if (level === 2) return fromForm(draw(multipleForms, "multiples"), 3000);
+  return swapQuestion(draw);
 }
 
 export const percentOfDrill: DrillDefinition = {
