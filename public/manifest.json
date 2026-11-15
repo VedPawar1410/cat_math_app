@@ -37,6 +37,13 @@
   "screenshots": [],
   "shortcuts": [
     {
+      "name": "My CAT coaching tricks",
+      "short_name": "Coaching",
+      "description": "Tricks and drills from my coaching classes",
+      "url": "/#coaching",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
       "name": "Start Math Practice",
       "short_name": "Math",
       "description": "Start addition and subtraction practice",

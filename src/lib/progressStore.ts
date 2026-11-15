@@ -1,7 +1,9 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { DrillId } from "@/content/coaching/types";
 
 export type ProgressMode =
+  | `coach-${DrillId}`
   | "math-addition"
   | "math-subtraction"
   | "math-mixed"
